@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Place, UserPreferences } from '../types';
-import { MOCK_PLACES } from '../data/mockPlaces';
+import { MOCK_PLACES } from '../data/mockPlaces.ts';
 
 interface AppState {
   allPlaces: Place[];

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus, Check, Clock, Shield, Accessibility } from 'lucide-react';
 import { Place } from '../types';
-import { useAppStore } from '../store/UseAppStore.ts';
+import { useAppStore } from '../store/useAppStore.ts';
 
 interface PlaceCardProps {
   place: Place;

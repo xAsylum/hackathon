@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useAppStore } from '../store/UseAppStore.ts';
+import { useAppStore } from '../store/useAppStore.ts';
 import { PlaceCard } from './PlaceCard.tsx';
 import { Compass } from 'lucide-react';
 
