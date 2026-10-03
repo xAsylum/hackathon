@@ -1,0 +1,15 @@
+[project]
+name = "hackyeah2026"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.110.0",
+    "pydantic>=2.6.4",
+    "pydantic-settings>=2.2.1",
+    "python-dotenv>=1.0.1",
+    "requests>=2.31.0",
+    "sqlalchemy>=2.0.28",
+    "uvicorn[standard]>=0.28.0",
+]
