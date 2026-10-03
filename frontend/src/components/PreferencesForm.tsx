@@ -10,7 +10,7 @@ import {
   Eye,
   Moon
 } from 'lucide-react';
-import { useAppStore } from '../store/UseAppStore.ts';
+import { useAppStore } from '../store/useAppStore.ts';
 import { Mood, Category } from '../types';
 
 const MOODS: { id: Mood; label: string; icon: React.ElementType }[] = [
