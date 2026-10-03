@@ -13,7 +13,10 @@ export const ItineraryCart: React.FC = () => {
   const { cart, removeFromCart, moveCartItem, preferences, clearCart } = useAppStore();
 
   // Obliczenie łącznego czasu (czas w atrakcjach + orientacyjny bufor 15 min marszu między punktami)
-  const totalAttractionMinutes = cart.reduce((sum, item) => sum + item.durationMinutes, 0);
+  const totalAttractionMinutes = cart.reduce(
+    (sum, item) => sum + (item.duration_minutes ?? 30),
+    0
+  );
   const estimatedWalkingMinutes = cart.length > 1 ? (cart.length - 1) * 15 : 0;
   const totalEstimatedMinutes = totalAttractionMinutes + estimatedWalkingMinutes;
 
@@ -97,7 +100,7 @@ export const ItineraryCart: React.FC = () => {
                 <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
                   <span className="capitalize">{place.category}</span>
                   <span>•</span>
-                  <span>{place.durationMinutes} min zwiedzania</span>
+                  <span>{place.duration_minutes ?? 30} min zwiedzania</span>
                 </div>
               </div>
 

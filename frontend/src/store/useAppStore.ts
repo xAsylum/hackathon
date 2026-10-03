@@ -1,24 +1,28 @@
 import { create } from 'zustand';
-import { Place, UserPreferences } from '../types';
-import { MOCK_PLACES } from '../data/mockPlaces.ts';
+import { Place, UserPreferences, RouteResponse } from '../types';
+import { fetchPlacesFromApi, calculateRouteApi } from '../api/places';
 
 interface AppState {
   allPlaces: Place[];
   preferences: UserPreferences;
   cart: Place[];
-  // Nowe: kontrola widoku
   isRouteGenerated: boolean;
-  setIsRouteGenerated: (value: boolean) => void;
+  isLoading: boolean;
+  routeData: RouteResponse | null;
 
+  // Akcje
+  loadPlaces: () => Promise<void>;
+  generateRoute: () => Promise<void>;
+  setIsRouteGenerated: (value: boolean) => void;
   setPreferences: (prefs: Partial<UserPreferences>) => void;
   addToCart: (place: Place) => void;
-  removeFromCart: (placeId: string) => void;
+  removeFromCart: (placeId: string | number) => void;
   moveCartItem: (index: number, direction: 'up' | 'down') => void;
   clearCart: () => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  allPlaces: MOCK_PLACES,
+export const useAppStore = create<AppState>((set, get) => ({
+  allPlaces: [],
   preferences: {
     mood: 'chill',
     availableTimeMinutes: 120,
@@ -27,7 +31,28 @@ export const useAppStore = create<AppState>((set) => ({
     selectedCategories: ['culture', 'nature'],
   },
   cart: [],
-  isRouteGenerated: false, // Domyślnie startujemy od pełnego ekranu konfiguracyjnego
+  isRouteGenerated: false,
+  isLoading: false,
+  routeData: null,
+
+  loadPlaces: async () => {
+    set({ isLoading: true });
+    const places = await fetchPlacesFromApi();
+    set({ allPlaces: places, isLoading: false });
+  },
+
+  generateRoute: async () => {
+    const { cart, preferences } = get();
+    if (cart.length === 0) return;
+
+    set({ isLoading: true });
+    const result = await calculateRouteApi(cart, preferences);
+    set({
+      routeData: result,
+      isRouteGenerated: true,
+      isLoading: false
+    });
+  },
 
   setIsRouteGenerated: (value) => set({ isRouteGenerated: value }),
 
@@ -36,13 +61,13 @@ export const useAppStore = create<AppState>((set) => ({
 
   addToCart: (place) =>
     set((state) => {
-      if (state.cart.some((item) => item.id === place.id)) return state;
+      if (state.cart.some((item) => String(item.id) === String(place.id))) return state;
       return { cart: [...state.cart, place] };
     }),
 
   removeFromCart: (placeId) =>
     set((state) => ({
-      cart: state.cart.filter((item) => item.id !== placeId),
+      cart: state.cart.filter((item) => String(item.id) !== String(placeId)),
     })),
 
   moveCartItem: (index, direction) =>

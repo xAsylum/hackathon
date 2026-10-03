@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Compass,
   ShoppingBag,
@@ -6,24 +6,36 @@ import {
   ArrowRight,
   ArrowLeft,
   SlidersHorizontal,
-  ListOrdered
+  ListOrdered,
+  Loader2
 } from 'lucide-react';
-import { useAppStore } from './store/useAppStore.ts';
+import { useAppStore } from './store/useAppStore';
 import { PreferencesForm } from './components/PreferencesForm';
 import { PlacesList } from './components/PlacesList';
 import { ItineraryCart } from './components/ItineraryCart';
 
 export default function App() {
-  const { cart, isRouteGenerated, setIsRouteGenerated } = useAppStore();
+  const {
+    cart,
+    isRouteGenerated,
+    setIsRouteGenerated,
+    generateRoute,
+    isLoading,
+    loadPlaces,
+    routeData
+  } = useAppStore();
 
-  // Zakładka w panelu bocznym na widoku mapy: 'cart' lub 'filters'
   const [activeTab, setActiveTab] = useState<'cart' | 'filters'>('cart');
+
+  // Pobranie punktów z backendu przy starcie
+  useEffect(() => {
+    loadPlaces();
+  }, [loadPlaces]);
 
   // WIDOK 1: Pełnoekranowy Kreator Trasy
   if (!isRouteGenerated) {
     return (
       <div className="min-h-screen w-screen bg-slate-950 text-slate-100 flex flex-col font-sans pb-20">
-        {/* Pasek nawigacyjny */}
         <header className="border-b border-slate-800 bg-slate-900/60 backdrop-blur sticky top-0 z-20 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -45,18 +57,26 @@ export default function App() {
 
               <button
                 type="button"
-                disabled={cart.length === 0}
-                onClick={() => setIsRouteGenerated(true)}
+                disabled={cart.length === 0 || isLoading}
+                onClick={() => generateRoute()}
                 className="flex items-center gap-2 px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 disabled:hover:bg-emerald-500 text-slate-950 font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
               >
-                <span>Generuj trasę</span>
-                <ArrowRight className="w-4 h-4" />
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Optymalizacja trasy...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Generuj trasę</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </div>
           </div>
         </header>
 
-        {/* Główny obszar kreatora */}
         <main className="flex-1 max-w-6xl w-full mx-auto p-6 md:p-8">
           <div className="text-center max-w-2xl mx-auto mb-10 space-y-2">
             <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
@@ -68,7 +88,6 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Lewa kolumna: Preferencje + Podgląd Koszyka */}
             <div className="lg:col-span-5 space-y-6 sticky top-24">
               <PreferencesForm />
 
@@ -81,7 +100,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Prawa kolumna: Karty atrakcji */}
             <div className="lg:col-span-7">
               <PlacesList />
             </div>
@@ -91,10 +109,9 @@ export default function App() {
     );
   }
 
-  // WIDOK 2: Nawigacja na Mapie z Zakładkami w Panelu Bocznym
+  // WIDOK 2: Nawigacja na Mapie
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans">
-      {/* Panel boczny */}
       <aside className="w-[420px] flex-shrink-0 h-full flex flex-col border-r border-slate-800/80 bg-slate-950 shadow-2xl z-10">
         <header className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/70">
           <button
@@ -134,8 +151,16 @@ export default function App() {
           </div>
         </header>
 
-        {/* Zawartość zależna od wybranej zakładki */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {routeData && (
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-300 flex items-center justify-between">
+              <span>Trasa wyznaczona:</span>
+              <span className="font-bold">
+                {(routeData.distance_meters / 1000).toFixed(1)} km (~{Math.round(routeData.duration_seconds / 60)} min)
+              </span>
+            </div>
+          )}
+
           {activeTab === 'cart' ? (
             <ItineraryCart />
           ) : (
@@ -147,14 +172,14 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Kontener na Mapę */}
+      {/* PRAWY OBSZAR: Tu podpina się osoba od Mapy */}
       <main className="flex-1 h-full relative bg-slate-900 flex items-center justify-center">
         <div id="map-container" className="absolute inset-0 flex items-center justify-center text-slate-500">
           <div className="text-center space-y-3">
             <MapIcon className="w-14 h-14 mx-auto stroke-1 animate-pulse text-emerald-500/50" />
-            <p className="text-base font-semibold text-slate-300">Widok Aktywnej Mapy</p>
+            <p className="text-base font-semibold text-slate-300">Widok Mapy Gotowy do Spięcia</p>
             <p className="text-xs text-slate-500 max-w-xs mx-auto">
-              Punkty ułożone w koszyku wyznaczają kolejne przystanki wygenerowanej trasy.
+              Osoba od mapy importuje <code>useAppStore</code>, czyta <code>cart</code> oraz <code>routeData.geojson</code> i rysuje trasę.
             </p>
           </div>
         </div>
