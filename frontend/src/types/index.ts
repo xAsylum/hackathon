@@ -30,8 +30,43 @@ export interface UserPreferences {
   selectedCategories: Category[];
 }
 
+export interface RouteSegmentProperties {
+  green: number;
+  traffic: number;
+  lit: boolean;
+  highway: string;
+}
+
+export interface RouteSegment {
+  type: 'Feature';
+  geometry: {
+    type: 'LineString';
+    coordinates: [number, number][];
+  };
+  properties: RouteSegmentProperties;
+}
+
+export interface RouteFeatureCollection {
+  type: 'FeatureCollection';
+  features: RouteSegment[];
+}
+
+export interface MapRouteData {
+  stats: {
+    distance_m: number;
+    total_min: number;
+    pct_green: number;
+  };
+  route: RouteFeatureCollection;
+}
+
 export interface RouteResponse {
   distance_meters: number;
   duration_seconds: number;
-  geojson: any;
+  geojson:
+    | RouteFeatureCollection
+    | {
+        type: 'LineString';
+        coordinates: [number, number][];
+      };
 }

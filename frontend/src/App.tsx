@@ -1,18 +1,52 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Compass,
   ShoppingBag,
-  Map as MapIcon,
   ArrowRight,
   ArrowLeft,
   SlidersHorizontal,
   ListOrdered,
-  Loader2
+  Loader2,
 } from 'lucide-react';
 import { useAppStore } from './store/useAppStore';
 import { PreferencesForm } from './components/PreferencesForm';
 import { PlacesList } from './components/PlacesList';
 import { ItineraryCart } from './components/ItineraryCart';
+import { InteractiveMap } from './components/InteractiveMap';
+import { MOCK_ROUTE } from './data/mockRoute';
+import type { MapRouteData, RouteResponse } from './types';
+
+function asMapRouteData(routeData: RouteResponse | null): MapRouteData {
+  if (!routeData) return MOCK_ROUTE;
+
+  const route =
+    routeData.geojson.type === 'FeatureCollection'
+      ? routeData.geojson
+      : {
+          type: 'FeatureCollection' as const,
+          features: [
+            {
+              type: 'Feature' as const,
+              geometry: routeData.geojson,
+              properties: {
+                green: 0,
+                traffic: 0,
+                lit: false,
+                highway: 'footway',
+              },
+            },
+          ],
+        };
+
+  return {
+    stats: {
+      distance_m: routeData.distance_meters,
+      total_min: Math.round(routeData.duration_seconds / 60),
+      pct_green: 0,
+    },
+    route,
+  };
+}
 
 export default function App() {
   const {
@@ -22,8 +56,10 @@ export default function App() {
     generateRoute,
     isLoading,
     loadPlaces,
-    routeData
+    routeData,
+    removeFromCart,
   } = useAppStore();
+  const mapRouteData = asMapRouteData(routeData);
 
   const [activeTab, setActiveTab] = useState<'cart' | 'filters'>('cart');
 
@@ -111,8 +147,8 @@ export default function App() {
 
   // WIDOK 2: Nawigacja na Mapie
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans">
-      <aside className="w-[420px] flex-shrink-0 h-full flex flex-col border-r border-slate-800/80 bg-slate-950 shadow-2xl z-10">
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-slate-950 text-slate-100 font-sans md:flex-row">
+      <aside className="z-10 flex h-[46vh] w-full flex-shrink-0 flex-col border-b border-slate-800/80 bg-slate-950 shadow-2xl md:h-full md:w-[420px] md:border-b-0 md:border-r">
         <header className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/70">
           <button
             type="button"
@@ -151,15 +187,32 @@ export default function App() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {routeData && (
-            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-300 flex items-center justify-between">
-              <span>Trasa wyznaczona:</span>
-              <span className="font-bold">
-                {(routeData.distance_meters / 1000).toFixed(1)} km (~{Math.round(routeData.duration_seconds / 60)} min)
-              </span>
-            </div>
-          )}
+        <div className="flex-1 overflow-y-auto p-4 space-y-5">
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3">
+            <p className="mb-3 text-xs font-semibold text-emerald-300">
+              Trasa wygenerowana pomyślnie
+            </p>
+            <dl className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <dt className="text-[10px] uppercase tracking-wide text-slate-500">Dystans</dt>
+                <dd className="text-sm font-bold text-white">
+                  {(mapRouteData.stats.distance_m / 1000).toFixed(1)} km
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-wide text-slate-500">Czas</dt>
+                <dd className="text-sm font-bold text-white">
+                  {mapRouteData.stats.total_min} min
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[10px] uppercase tracking-wide text-slate-500">Zieleń</dt>
+                <dd className="text-sm font-bold text-emerald-300">
+                  {mapRouteData.stats.pct_green}%
+                </dd>
+              </div>
+            </dl>
+          </div>
 
           {activeTab === 'cart' ? (
             <ItineraryCart />
@@ -172,17 +225,12 @@ export default function App() {
         </div>
       </aside>
 
-      {/* PRAWY OBSZAR: Tu podpina się osoba od Mapy */}
-      <main className="flex-1 h-full relative bg-slate-900 flex items-center justify-center">
-        <div id="map-container" className="absolute inset-0 flex items-center justify-center text-slate-500">
-          <div className="text-center space-y-3">
-            <MapIcon className="w-14 h-14 mx-auto stroke-1 animate-pulse text-emerald-500/50" />
-            <p className="text-base font-semibold text-slate-300">Widok Mapy Gotowy do Spięcia</p>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto">
-              Osoba od mapy importuje <code>useAppStore</code>, czyta <code>cart</code> oraz <code>routeData.geojson</code> i rysuje trasę.
-            </p>
-          </div>
-        </div>
+      <main className="relative min-h-0 flex-1 bg-slate-900">
+        <InteractiveMap
+          data={mapRouteData}
+          places={cart}
+          onRemovePlace={removeFromCart}
+        />
       </main>
     </div>
   );

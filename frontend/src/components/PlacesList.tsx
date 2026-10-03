@@ -22,7 +22,7 @@ export const PlacesList: React.FC = () => {
       }
 
       // Wymóg oświetlenia po zmroku
-      if (preferences.prioritizeWellLit && !place.isWellLit) {
+      if (preferences.prioritizeWellLit && place.isWellLit === false) {
         return false;
       }
 
