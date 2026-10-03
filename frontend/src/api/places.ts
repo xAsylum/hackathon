@@ -1,29 +1,35 @@
-import { Place, RouteResponse, UserPreferences } from '../types';
+import { Place, RouteResponse, UserPreferences, Category } from '../types';
 import { MOCK_PLACES } from '../data/mockPlaces';
 
-// Rzutowanie (import.meta as any) zapobiega błędowi TS2339
 const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
 
-// 1. Pobieranie listy atrakcji z bazy danych
+// 1. Pobieranie danych z bazy FastAPI
 export async function fetchPlacesFromApi(): Promise<Place[]> {
   try {
-    const res = await fetch(`${API_URL}/api/places`);
-    if (!res.ok) throw new Error('Błąd pobierania z API');
+    const res = await fetch(`${API_URL}/api/attractions/random?limit=50`);
+    if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     const data = await res.json();
 
-    // Mapowanie odpowiedzi backendu (snake_case -> camelCase) z wartościami domyślnymi
     return data.map((item: any) => ({
-      ...item,
-      isAccessible: item.isAccessible ?? item.is_accessible ?? true,
-      durationMinutes: item.durationMinutes ?? item.duration_minutes ?? 30,
+      id: item.id,
+      name: item.name,
+      description: item.description || undefined,
+      category: item.category as Category,
+      monument_type: item.monument_type,
+      monument_subtype: item.monument_subtype || undefined,
+      latitude: item.latitude,
+      longitude: item.longitude,
+      wheelchair: item.wheelchair,
+      isAccessible: item.wheelchair === 'yes' || item.wheelchair === 'designated',
+      durationMinutes: item.monument_type === 'museum' ? 60 : 30,
     }));
   } catch (err) {
-    console.warn('Backend niedostępny – używam danych lokalnych (mock)', err);
+    console.warn('Backend niedostępny – używam MOCK_PLACES', err);
     return MOCK_PLACES;
   }
 }
 
-// 2. Wysłanie wybranego koszyka do silnika trasowania backendu
+// 2. Wysłanie trasy do routingu (z fallbackiem dopóki zespół nie dopisze endpointu)
 export async function calculateRouteApi(
   places: Place[],
   preferences: UserPreferences
@@ -44,13 +50,13 @@ export async function calculateRouteApi(
       }),
     });
 
-    if (!res.ok) throw new Error('Błąd kalkulacji trasy');
+    if (!res.ok) throw new Error('Brak endpointu trasy w backendzie');
     return await res.json();
   } catch (err) {
-    console.warn('Brak połączenia z silnikiem trasowania. Zwracam mock trasy.', err);
+    console.warn('Używam mocka trasy', err);
     return {
       distance_meters: 2800,
-      duration_seconds: 2100, // ~35 min
+      duration_seconds: 2100,
       geojson: {
         type: 'LineString',
         coordinates: places.map((p) => [p.longitude, p.latitude]),

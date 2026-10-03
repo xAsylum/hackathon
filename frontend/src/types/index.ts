@@ -1,19 +1,25 @@
-export type Category = 'culture' | 'nature' | 'food' | 'history' | 'viewpoint';
+export type Category =
+  | 'landmarks'
+  | 'culture'
+  | 'nature'
+  | 'food and cuisine'
+  | 'entertainment'
+  | 'alcohol';
+
 export type Mood = 'chill' | 'culture' | 'night_vibe' | 'quick_walk';
 
 export interface Place {
   id: string | number;
   name: string;
   category: Category;
+  monument_type: string;
+  monument_subtype?: string;
   latitude: number;
   longitude: number;
   isAccessible: boolean;
-  isCommunitySubmitted?: boolean;
-  verification_votes?: number;
-  status?: string;
-  // Pola opcjonalne z domyślnym fallbackiem w UI
+  wheelchair?: string;
   description?: string;
-  durationMinutes?: number;
+  durationMinutes: number;
 }
 
 export interface UserPreferences {
@@ -27,5 +33,5 @@ export interface UserPreferences {
 export interface RouteResponse {
   distance_meters: number;
   duration_seconds: number;
-  geojson: any; // obiekt GeoJSON (linia trasy do narysowania na mapie)
+  geojson: any;
 }
