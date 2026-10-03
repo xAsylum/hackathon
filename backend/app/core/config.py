@@ -8,6 +8,20 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Hackathon API"
     API_V1_STR: str = "/api"
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:////app/data/app.db")
+
+    # Overpass / OpenStreetMap
+    # Endpoints are tried in order until one succeeds.
+    OVERPASS_URLS: List[str] = [
+        "https://overpass-api.de/api/interpreter",
+        "https://overpass.kumi.systems/api/interpreter",
+        "https://overpass.private.coffee/api/interpreter",
+    ]
+    OVERPASS_TIMEOUT: int = 180
+    # Overpass area id = 3600000000 + OSM relation id.
+    # Relation 2768922 = Kraków city boundary (boundary=administrative, admin_level=8).
+    KRAKOW_AREA_ID: int = 3602768922
+    # Fetch attractions from Overpass on startup if the table is empty.
+    SEED_ATTRACTIONS_ON_STARTUP: bool = True
     
     # CORS Configuration
     CORS_ORIGINS: Union[List[str], str] = [
