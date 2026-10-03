@@ -1,10 +1,11 @@
 import { create } from 'zustand';
-import { Place, UserPreferences, RouteResponse } from '../types';
+import { Place, UserPreferences, RouteResponse, PlaceFilterParams } from '../types';
 import { fetchPlacesFromApi, calculateRouteApi } from '../api/places';
 
 interface AppState {
   allPlaces: Place[];
   preferences: UserPreferences;
+  searchQuery: string;
   cart: Place[];
   cartWasModified: boolean;
   isRouteGenerated: boolean;
@@ -12,7 +13,8 @@ interface AppState {
   routeData: RouteResponse | null;
 
   // Akcje
-  loadPlaces: () => Promise<void>;
+  setSearchQuery: (query: string) => void;
+  loadPlaces: (filters?: PlaceFilterParams) => Promise<void>;
   generateRoute: () => Promise<void>;
   setIsRouteGenerated: (value: boolean) => void;
   setPreferences: (prefs: Partial<UserPreferences>) => void;
@@ -31,15 +33,48 @@ export const useAppStore = create<AppState>((set, get) => ({
     accessibleOnly: false,
     selectedCategories: ['culture', 'nature'],
   },
+  searchQuery: '',
   cart: [],
   cartWasModified: false,
   isRouteGenerated: false,
   isLoading: false,
   routeData: null,
 
-  loadPlaces: async () => {
+  setSearchQuery: (query: string) => {
+    set({ searchQuery: query });
+    get().loadPlaces({ search: query.trim() || undefined });
+  },
+
+  // Pobieranie miejsc zawsze łączące aktywne wyszukiwanie z nałożonymi filtrami
+  loadPlaces: async (overrideFilters) => {
+    const { preferences, searchQuery } = get();
+
+    const effectiveSearch =
+      overrideFilters?.search !== undefined
+        ? overrideFilters.search
+        : searchQuery.trim() || undefined;
+
+    const effectiveAccessibleOnly =
+      overrideFilters?.accessibleOnly !== undefined
+        ? overrideFilters.accessibleOnly
+        : preferences.accessibleOnly || undefined;
+
+    const effectiveCategories =
+      overrideFilters?.categories !== undefined
+        ? overrideFilters.categories
+        : preferences.selectedCategories.length > 0
+        ? preferences.selectedCategories
+        : undefined;
+
+    const effectiveFilters: PlaceFilterParams = {
+      search: effectiveSearch,
+      accessibleOnly: effectiveAccessibleOnly,
+      categories: effectiveCategories,
+      ...overrideFilters,
+    };
+
     set({ isLoading: true });
-    const places = await fetchPlacesFromApi();
+    const places = await fetchPlacesFromApi(effectiveFilters);
     set({ allPlaces: places, isLoading: false });
   },
 
@@ -52,14 +87,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       routeData: result,
       isRouteGenerated: true,
-      isLoading: false
+      isLoading: false,
     });
   },
 
   setIsRouteGenerated: (value) => set({ isRouteGenerated: value }),
 
-  setPreferences: (newPrefs) =>
-    set((state) => ({ preferences: { ...state.preferences, ...newPrefs } })),
+  // Aktualizacja preferencji automatycznie odświeża listę z zachowaniem wyszukiwania
+  setPreferences: (newPrefs) => {
+    set((state) => ({ preferences: { ...state.preferences, ...newPrefs } }));
+    get().loadPlaces();
+  },
 
   addToCart: (place) =>
     set((state) => {

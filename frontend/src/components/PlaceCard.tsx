@@ -52,11 +52,10 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
         <button
           type="button"
           onClick={() => (isInCart ? removeFromCart(place.id) : addToCart(place))}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            isInCart
-              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-              : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
-          }`}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isInCart
+            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+            : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+            }`}
         >
           {isInCart ? (
             <>

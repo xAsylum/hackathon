@@ -10,3 +10,11 @@ def health():
 
 
 api_router.include_router(attractions.router, prefix="/attractions", tags=["Attractions"])
+api_router.add_api_route(
+    "/places",
+    attractions.get_places,
+    methods=["GET"],
+    response_model=attractions.List[attractions.PlaceResponse],
+    tags=["Places"],
+    summary="Get places formatted for frontend with filter options",
+)

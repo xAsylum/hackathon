@@ -19,7 +19,9 @@ export interface Place {
   isAccessible: boolean;
   wheelchair?: string;
   description?: string;
-  durationMinutes: number;
+  durationMinutes?: number;
+  monument_type?: string;
+  monument_subtype?: string;
 }
 
 export interface UserPreferences {

@@ -1,11 +1,11 @@
-from app.schemas.item import ItemCreate, ItemUpdate, ItemResponse
-from app.schemas.attraction import AttractionResponse, AttractionNameResponse
+from app.schemas.attraction import (
+    AttractionResponse,
+    AttractionNameResponse,
+    PlaceResponse,
+)
 
 __all__ = [
-    "ItemCreate",
-    "ItemUpdate",
-    "ItemResponse",
     "AttractionResponse",
     "AttractionNameResponse",
+    "PlaceResponse",
 ]
-

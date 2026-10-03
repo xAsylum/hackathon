@@ -1,3 +1,4 @@
+
 import { Place, RouteResponse, UserPreferences, Category } from '../types';
 import { MOCK_PLACES } from '../data/mockPlaces';
 
