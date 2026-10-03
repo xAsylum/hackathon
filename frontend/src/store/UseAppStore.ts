@@ -1,14 +1,15 @@
 import { create } from 'zustand';
 import { Place, UserPreferences } from '../types';
-import { MOCK_PLACES } from '../data/mock_places';
+import { MOCK_PLACES } from '../data/mockPlaces';
 
 interface AppState {
-  // Dane i preferencje
   allPlaces: Place[];
   preferences: UserPreferences;
   cart: Place[];
+  // Nowe: kontrola widoku
+  isRouteGenerated: boolean;
+  setIsRouteGenerated: (value: boolean) => void;
 
-  // Akcje
   setPreferences: (prefs: Partial<UserPreferences>) => void;
   addToCart: (place: Place) => void;
   removeFromCart: (placeId: string) => void;
@@ -26,6 +27,9 @@ export const useAppStore = create<AppState>((set) => ({
     selectedCategories: ['culture', 'nature'],
   },
   cart: [],
+  isRouteGenerated: false, // Domyślnie startujemy od pełnego ekranu konfiguracyjnego
+
+  setIsRouteGenerated: (value) => set({ isRouteGenerated: value }),
 
   setPreferences: (newPrefs) =>
     set((state) => ({ preferences: { ...state.preferences, ...newPrefs } })),
