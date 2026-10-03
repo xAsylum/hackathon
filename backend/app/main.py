@@ -1,3 +1,4 @@
+from app.scripts.seed_attractions import seed_on_startup
 import os
 import threading
 from contextlib import asynccontextmanager
@@ -20,9 +21,7 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     # Fill attractions from Overpass if the table is empty (non-blocking)
     if settings.SEED_ATTRACTIONS_ON_STARTUP:
-        from app.scripts.seed_attractions import seed_on_startup
-
-        threading.Thread(target=seed_on_startup, name="seed-attractions", daemon=True).start()
+        seed_on_startup()
     yield
 
 

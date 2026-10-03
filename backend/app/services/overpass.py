@@ -1,22 +1,13 @@
 """
-Overpass API client for fetching Kraków monuments / tourist attractions.
+Overpass API client for fetching Kraków places of interest.
 
-How OSM data is stored (relevant for the query below):
-  * Elements are `node` (a point), `way` (an ordered list of nodes - e.g. a building
-    outline) or `relation` (a group of elements - e.g. a castle complex).
-  * Semantics live in free-form key=value `tags`. Attractions are described by keys like
-    `tourism=*` (museum, attraction, viewpoint...), `historic=*` (castle, monument,
-    memorial, church...) and `heritage=*` (officially protected monument / "zabytek").
-  * Accessibility uses `wheelchair=yes|limited|no|designated`, `wheelchair:description`,
-    `toilets:wheelchair`, plus less common keys (ramp, tactile_paving, blind:*, deaf:*...).
-
-Query strategy (Kraków has millions of nodes, so we filter server-side):
-  * Restrict to the Kraków admin boundary area (area id = 3600000000 + relation id).
-  * Only request elements carrying the tourism/historic/heritage values we care about
-    AND a `name` (unnamed objects are useless in a list / map UI).
-  * Skip `memorial=plaque` (hundreds of small wall plaques).
-  * `out center tags` returns tags + a single center coordinate for ways/relations,
-    instead of their full geometry - keeps the response small (~1.2k elements).
+Categories:
+* nature
+* landmarks
+* culture
+* entertainment
+* food and cuisine
+* alcohol
 """
 import logging
 import time
@@ -30,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 USER_AGENT = "HackathonKrakowAttractions/0.1 (+https://github.com/xAsylum/hackathon)"
 
+# OSM Values for the query
 TOURISM_VALUES = [
     "attraction", "museum", "gallery", "viewpoint", "artwork",
     "zoo", "theme_park", "aquarium",
@@ -40,16 +32,21 @@ HISTORIC_VALUES = [
     "fortification", "tomb", "building", "manor", "palace", "tower", "bunker",
     "wayside_shrine", "mound", "heritage", "synagogue",
 ]
-
-# Tourism values that describe the place better than its historic tag
-# (a museum inside a historic building is primarily a museum).
-PRIMARY_TOURISM = {"museum", "gallery", "zoo", "theme_park", "aquarium", "viewpoint"}
-# Historic values that are too generic to be the main type if something better exists.
-GENERIC_HISTORIC = {"yes", "building", "heritage"}
+AMENITY_VALUES = [
+    "bar", "pub", "biergarten", 
+    "restaurant", "cafe", "fast_food", "food_court", "ice_cream", 
+    "theatre", "arts_centre", "cinema", "nightclub"
+]
+LEISURE_VALUES = [
+    "park", "nature_reserve", "garden", "water_park", "amusement_arcade", "escape_game"
+]
+NATURAL_VALUES = [
+    "peak", "beach", "water", "wood", "lake"
+]
 
 WHEELCHAIR_VALUES = {"yes", "limited", "no", "designated"}
 ACCESSIBILITY_KEY_PREFIXES = (
-    "wheelchair", "toilets:wheelchair", "ramp", "elevator", "lift", "tactile_paving",
+    "wheelchair", "ramp", "elevator", "lift", "tactile_paving",
     "blind", "deaf", "hearing_loop", "handrail", "step_count", "kerb", "entrance",
     "automatic_door", "door", "capacity:disabled", "disabled", "braille",
     "description:blind", "description:wheelchair",
@@ -59,6 +56,10 @@ ACCESSIBILITY_KEY_PREFIXES = (
 def build_query(area_id: int, timeout: int) -> str:
     tourism_re = "|".join(TOURISM_VALUES)
     historic_re = "|".join(HISTORIC_VALUES)
+    amenity_re = "|".join(AMENITY_VALUES)
+    leisure_re = "|".join(LEISURE_VALUES)
+    natural_re = "|".join(NATURAL_VALUES)
+    
     return f"""
 [out:json][timeout:{timeout}];
 area(id:{area_id})->.krakow;
@@ -67,6 +68,9 @@ area(id:{area_id})->.krakow;
   nwr["historic"~"^({historic_re})$"]["name"](area.krakow);
   nwr["historic"="memorial"]["memorial"!="plaque"]["name"](area.krakow);
   nwr["heritage"]["name"](area.krakow);
+  nwr["amenity"~"^({amenity_re})$"]["name"](area.krakow);
+  nwr["leisure"~"^({leisure_re})$"]["name"](area.krakow);
+  nwr["natural"~"^({natural_re})$"]["name"](area.krakow);
 );
 out center tags;
 """.strip()
@@ -95,12 +99,10 @@ def fetch_raw_elements(
                     headers={"User-Agent": USER_AGENT},
                     timeout=timeout + 30,
                 )
-                # 429 = rate limited, 504 = server overloaded -> back off and retry
                 if resp.status_code in (429, 502, 503, 504):
                     raise requests.HTTPError(f"HTTP {resp.status_code}", response=resp)
                 resp.raise_for_status()
                 payload = resp.json()
-                # Overpass may return 200 with a runtime error in `remark` (e.g. timeout)
                 remark = payload.get("remark")
                 if remark and "error" in remark.lower():
                     raise RuntimeError(f"Overpass runtime error: {remark}")
@@ -116,38 +118,61 @@ def fetch_raw_elements(
 
 
 def _classify(tags: Dict[str, str]) -> Optional[Tuple[str, str]]:
-    """Return (category, monument_type) for an element, or None if it doesn't fit."""
+    """Return (category, place_type) for an element, or None if it doesn't fit."""
+    amenity = tags.get("amenity")
     tourism = tags.get("tourism")
+    leisure = tags.get("leisure")
+    natural = tags.get("natural")
     historic = tags.get("historic")
 
-    if tourism in PRIMARY_TOURISM:
-        return "tourism", tourism
-    if historic and historic not in GENERIC_HISTORIC:
-        return "historic", historic
-    if tourism in TOURISM_VALUES:
-        return "tourism", tourism
+    # 1. Alcohol
+    if amenity in {"bar", "pub", "biergarten"}:
+        return "alcohol", amenity
+
+    # 2. Food and cuisine
+    if amenity in {"restaurant", "cafe", "fast_food", "food_court", "ice_cream"}:
+        return "food and cuisine", amenity
+
+    # 3. Entertainment
+    if tourism in {"zoo", "theme_park", "aquarium"}:
+        return "entertainment", tourism
+    if amenity in {"cinema", "nightclub"}:
+        return "entertainment", amenity
+    if leisure in {"water_park", "amusement_arcade", "escape_game"}:
+        return "entertainment", leisure
+
+    # 4. Culture
+    if tourism in {"museum", "gallery", "artwork"}:
+        return "culture", tourism
+    if amenity in {"theatre", "arts_centre"}:
+        return "culture", amenity
+
+    # 5. Nature
+    if leisure in {"park", "nature_reserve", "garden"}:
+        return "nature", leisure
+    if natural in NATURAL_VALUES:
+        return "nature", natural
+        
+    # 6. Landmarks
+    if tourism in {"attraction", "viewpoint"}:
+        return "landmarks", tourism
     if historic and historic != "yes":
-        return "historic", historic
+        return "landmarks", historic
     if "heritage" in tags:
-        for key in ("amenity", "building"):
-            value = tags.get(key)
-            if value and value != "yes":
-                return "heritage", value
-        return "heritage", "heritage"
+        return "landmarks", "heritage"
+
     return None
 
 
-def _subtype(monument_type: str, tags: Dict[str, str]) -> Optional[str]:
-    # e.g. artwork_type=sculpture, castle_type=defensive, memorial=statue, museum=history
-    return tags.get(f"{monument_type}_type") or tags.get(monument_type)
+def _subtype(place_type: str, tags: Dict[str, str]) -> Optional[str]:
+    if place_type in {"restaurant", "cafe", "fast_food", "food_court"}:
+        return tags.get("cuisine") or tags.get("diet:vegan") and "vegan"
+    if place_type in {"pub", "bar"}:
+        return tags.get("brewery") or tags.get("cuisine")
+        
+    # Standard fallback
+    return tags.get(f"{place_type}_type") or tags.get(place_type)
 
-
-def _address(tags: Dict[str, str]) -> Optional[str]:
-    street = tags.get("addr:street") or tags.get("addr:place")
-    if not street:
-        return None
-    number = tags.get("addr:housenumber")
-    return f"{street} {number}" if number else street
 
 
 def _accessibility_tags(tags: Dict[str, str]) -> Optional[Dict[str, str]]:
@@ -169,7 +194,6 @@ def parse_element(element: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     if not name:
         return None
 
-    # Nodes carry lat/lon directly; ways/relations carry `center` thanks to `out center`
     if "lat" in element and "lon" in element:
         lat, lon = element["lat"], element["lon"]
     elif "center" in element:
@@ -180,30 +204,25 @@ def parse_element(element: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     classification = _classify(tags)
     if classification is None:
         return None
-    category, monument_type = classification
+    category, place_type = classification
+
+    desc_parts = []
+    if base_desc := tags.get("description:en") or tags.get("description"):
+        desc_parts.append(base_desc)
+        
+    compiled_description = "\n".join(desc_parts) if desc_parts else None
 
     return {
-        "osm_type": element["type"],
-        "osm_id": element["id"],
+        "id": element["id"],
         "name": name[:255],
-        "description": tags.get("description:en") or tags.get("description"),
+        "description": compiled_description,
         "latitude": lat,
         "longitude": lon,
         "category": category,
-        "monument_type": monument_type,
-        "monument_subtype": _subtype(monument_type, tags),
+        "monument_type": place_type,
+        "monument_subtype": _subtype(place_type, tags),
         "wheelchair": _normalize_wheelchair(tags.get("wheelchair")),
-        "wheelchair_description": tags.get("wheelchair:description:en")
-        or tags.get("wheelchair:description"),
-        "toilets_wheelchair": _normalize_wheelchair(tags.get("toilets:wheelchair")),
         "accessibility_tags": _accessibility_tags(tags),
-        "address": _address(tags),
-        "website": tags.get("website") or tags.get("contact:website") or tags.get("url"),
-        "opening_hours": tags.get("opening_hours"),
-        "wikipedia": tags.get("wikipedia"),
-        "wikidata": tags.get("wikidata"),
-        "image": tags.get("image") or tags.get("wikimedia_commons"),
-        "tags": tags,
     }
 
 
@@ -213,5 +232,5 @@ def fetch_krakow_attractions() -> List[Dict[str, Any]]:
     for element in fetch_raw_elements():
         item = parse_element(element)
         if item:
-            parsed[(item["osm_type"], item["osm_id"])] = item
+            parsed[(item["id"])] = item
     return list(parsed.values())
