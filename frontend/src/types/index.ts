@@ -1,28 +1,10 @@
 export type Category =
+  | 'landmarks'
   | 'culture'
   | 'nature'
-  | 'food'
-  | 'history'
-  | 'viewpoint'
-  | 'nightlife'
+  | 'food and cuisine'
   | 'entertainment'
-  | 'landmarks';
-
-export const CATEGORY_LABELS_PL: Record<string, string> = {
-  culture: 'Kultura',
-  nature: 'Przyroda & Parki',
-  food: 'Gastronomia',
-  history: 'Zabytki & Historia',
-  viewpoint: 'Punkt widokowy',
-  nightlife: 'Życie nocne',
-  entertainment: 'Rozrywka',
-  landmarks: 'Zabytki',
-};
-
-export function getCategoryLabelPL(category?: string): string {
-  if (!category) return 'Inne';
-  return CATEGORY_LABELS_PL[category.toLowerCase()] || category;
-}
+  | 'alcohol';
 
 export type Mood = 'chill' | 'culture' | 'night_vibe' | 'quick_walk';
 
@@ -30,28 +12,16 @@ export interface Place {
   id: string | number;
   name: string;
   category: Category;
+  monument_type: string;
+  monument_subtype?: string;
   latitude: number;
   longitude: number;
   isAccessible: boolean;
-  durationMinutes?: number;
+  wheelchair?: string;
   description?: string;
+  durationMinutes?: number;
   monument_type?: string;
   monument_subtype?: string;
-  wheelchair?: string;
-  raw_category?: string;
-  isCommunitySubmitted?: boolean;
-  verification_votes?: number;
-  status?: string;
-}
-
-export interface PlaceFilterParams {
-  categories?: Category[];
-  excludeCategories?: Category[];
-  accessibleOnly?: boolean;
-  excludeIds?: (string | number)[];
-  search?: string;
-  limit?: number;
-  offset?: number;
 }
 
 export interface UserPreferences {
@@ -62,8 +32,43 @@ export interface UserPreferences {
   selectedCategories: Category[];
 }
 
+export interface RouteSegmentProperties {
+  green: number;
+  traffic: number;
+  lit: boolean;
+  highway: string;
+}
+
+export interface RouteSegment {
+  type: 'Feature';
+  geometry: {
+    type: 'LineString';
+    coordinates: [number, number][];
+  };
+  properties: RouteSegmentProperties;
+}
+
+export interface RouteFeatureCollection {
+  type: 'FeatureCollection';
+  features: RouteSegment[];
+}
+
+export interface MapRouteData {
+  stats: {
+    distance_m: number;
+    total_min: number;
+    pct_green: number;
+  };
+  route: RouteFeatureCollection;
+}
+
 export interface RouteResponse {
   distance_meters: number;
   duration_seconds: number;
-  geojson: any; // GeoJSON object representing the route line
+  geojson:
+    | RouteFeatureCollection
+    | {
+        type: 'LineString';
+        coordinates: [number, number][];
+      };
 }

@@ -3,15 +3,14 @@ import {
   Clock,
   ShieldCheck,
   Accessibility,
-  Coffee,
+  Utensils,
   Landmark,
   Trees,
-  Eye,
   Moon,
-  Wine,
-  Compass
+  PartyPopper,
+  Wine
 } from 'lucide-react';
-import { useAppStore } from '../store/useAppStore.ts';
+import { useAppStore } from '../store/useAppStore';
 import { Mood, Category } from '../types';
 
 const MOODS: { id: Mood; label: string; icon: React.ElementType }[] = [
@@ -22,13 +21,12 @@ const MOODS: { id: Mood; label: string; icon: React.ElementType }[] = [
 ];
 
 const CATEGORIES: { id: Category; label: string; icon: React.ElementType }[] = [
-  { id: 'culture', label: 'Kultura', icon: Landmark },
-  { id: 'nature', label: 'Zieleń & Parki', icon: Trees },
-  { id: 'history', label: 'Zabytki', icon: Compass },
-  { id: 'food', label: 'Gastronomia', icon: Coffee },
-  { id: 'viewpoint', label: 'Punkty widokowe', icon: Eye },
-  { id: 'nightlife', label: 'Życie nocne', icon: Wine },
-  { id: 'entertainment', label: 'Rozrywka', icon: Sparkles },
+  { id: 'landmarks', label: 'Zabytki & Widoki', icon: Landmark },
+  { id: 'culture', label: 'Kultura & Sztuka', icon: Sparkles },
+  { id: 'nature', label: 'Parki & Zieleń', icon: Trees },
+  { id: 'food and cuisine', label: 'Gastronomia', icon: Utensils },
+  { id: 'alcohol', label: 'Bary & Puby', icon: Wine },
+  { id: 'entertainment', label: 'Rozrywka', icon: PartyPopper },
 ];
 
 export const PreferencesForm: React.FC = () => {
@@ -44,7 +42,7 @@ export const PreferencesForm: React.FC = () => {
 
   return (
     <div className="space-y-5 bg-slate-900/90 p-4 rounded-xl border border-slate-800 shadow-sm text-sm">
-      {/* 1. Nastrój (Mood) */}
+      {/* 1. Nastrój */}
       <div>
         <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
           Nastrój wycieczki
@@ -71,7 +69,7 @@ export const PreferencesForm: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Dostępny czas */}
+      {/* 2. Czas */}
       <div>
         <div className="flex justify-between items-center mb-1.5">
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
@@ -105,7 +103,6 @@ export const PreferencesForm: React.FC = () => {
           Priorytety miejskie
         </label>
 
-        {/* Przełącznik oświetlenia */}
         <label className="flex items-center justify-between p-2 rounded-lg bg-slate-800/40 border border-slate-800 cursor-pointer hover:bg-slate-800/70 transition-colors">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-amber-400" />
@@ -119,11 +116,10 @@ export const PreferencesForm: React.FC = () => {
           />
         </label>
 
-        {/* Przełącznik dostępności */}
         <label className="flex items-center justify-between p-2 rounded-lg bg-slate-800/40 border border-slate-800 cursor-pointer hover:bg-slate-800/70 transition-colors">
           <div className="flex items-center gap-2">
             <Accessibility className="w-4 h-4 text-sky-400" />
-            <span className="text-xs text-slate-200">Bez barier (wózki / windy)</span>
+            <span className="text-xs text-slate-200">Bez barier (wózki / brak schodów)</span>
           </div>
           <input
             type="checkbox"
@@ -139,7 +135,7 @@ export const PreferencesForm: React.FC = () => {
         <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
           Kategorie
         </label>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="grid grid-cols-2 gap-1.5">
           {CATEGORIES.map(({ id, label, icon: Icon }) => {
             const isSelected = preferences.selectedCategories.includes(id);
             return (
@@ -147,14 +143,14 @@ export const PreferencesForm: React.FC = () => {
                 key={id}
                 type="button"
                 onClick={() => toggleCategory(id)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors border ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs transition-colors border text-left ${
                   isSelected
-                    ? 'bg-slate-700 border-slate-500 text-white'
+                    ? 'bg-slate-700 border-slate-500 text-white font-medium'
                     : 'bg-slate-800/40 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <Icon className="w-3 h-3" />
-                <span>{label}</span>
+                <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">{label}</span>
               </button>
             );
           })}

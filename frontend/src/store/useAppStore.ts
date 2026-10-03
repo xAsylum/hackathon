@@ -7,6 +7,7 @@ interface AppState {
   preferences: UserPreferences;
   searchQuery: string;
   cart: Place[];
+  cartWasModified: boolean;
   isRouteGenerated: boolean;
   isLoading: boolean;
   routeData: RouteResponse | null;
@@ -34,6 +35,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   searchQuery: '',
   cart: [],
+  cartWasModified: false,
   isRouteGenerated: false,
   isLoading: false,
   routeData: null,
@@ -100,12 +102,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   addToCart: (place) =>
     set((state) => {
       if (state.cart.some((item) => String(item.id) === String(place.id))) return state;
-      return { cart: [...state.cart, place] };
+      return { cart: [...state.cart, place], cartWasModified: true };
     }),
 
   removeFromCart: (placeId) =>
     set((state) => ({
       cart: state.cart.filter((item) => String(item.id) !== String(placeId)),
+      cartWasModified: true,
     })),
 
   moveCartItem: (index, direction) =>
@@ -118,5 +121,5 @@ export const useAppStore = create<AppState>((set, get) => ({
       return { cart: newCart };
     }),
 
-  clearCart: () => set({ cart: [] }),
+  clearCart: () => set({ cart: [], cartWasModified: true }),
 }));

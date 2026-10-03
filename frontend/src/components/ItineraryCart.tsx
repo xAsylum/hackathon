@@ -15,7 +15,7 @@ export const ItineraryCart: React.FC = () => {
 
   // Obliczenie łącznego czasu (czas w atrakcjach + orientacyjny bufor 15 min marszu między punktami)
   const totalAttractionMinutes = cart.reduce(
-    (sum, item) => sum + (item.duration_minutes ?? 30),
+    (sum, item) => sum + (item.durationMinutes ?? 30),
     0
   );
   const estimatedWalkingMinutes = cart.length > 1 ? (cart.length - 1) * 15 : 0;

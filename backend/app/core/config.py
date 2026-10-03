@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # Relation 2768922 = Kraków city boundary (boundary=administrative, admin_level=8).
     KRAKOW_AREA_ID: int = 3602768922
     # Fetch attractions from Overpass on startup if the table is empty.
-    SEED_ATTRACTIONS_ON_STARTUP: bool = True
+    SEED_ATTRACTIONS_ON_STARTUP: bool = False
     
     # CORS Configuration
     CORS_ORIGINS: Union[List[str], str] = [
