@@ -12,7 +12,6 @@ class AttractionResponse(BaseModel):
     monument_type: str
     monument_subtype: Optional[str] = None
     wheelchair: Optional[str] = None
-    accessibility_tags: Optional[Dict[str, str]] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,3 +27,18 @@ class AttractionNameResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class PlaceResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    latitude: float
+    longitude: float
+    category: str
+    isAccessible: bool
+    durationMinutes: int = 30
+    monument_type: Optional[str] = None
+    monument_subtype: Optional[str] = None
+    raw_category: Optional[str] = None
+    wheelchair: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)

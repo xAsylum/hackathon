@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Sparkles,
   Clock,
@@ -8,7 +7,9 @@ import {
   Landmark,
   Trees,
   Eye,
-  Moon
+  Moon,
+  Wine,
+  Compass
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore.ts';
 import { Mood, Category } from '../types';
@@ -22,9 +23,12 @@ const MOODS: { id: Mood; label: string; icon: React.ElementType }[] = [
 
 const CATEGORIES: { id: Category; label: string; icon: React.ElementType }[] = [
   { id: 'culture', label: 'Kultura', icon: Landmark },
-  { id: 'nature', label: 'Zieleń', icon: Trees },
+  { id: 'nature', label: 'Zieleń & Parki', icon: Trees },
+  { id: 'history', label: 'Zabytki', icon: Compass },
   { id: 'food', label: 'Gastronomia', icon: Coffee },
-  { id: 'viewpoint', label: 'Widoki', icon: Eye },
+  { id: 'viewpoint', label: 'Punkty widokowe', icon: Eye },
+  { id: 'nightlife', label: 'Życie nocne', icon: Wine },
+  { id: 'entertainment', label: 'Rozrywka', icon: Sparkles },
 ];
 
 export const PreferencesForm: React.FC = () => {

@@ -1,15 +1,12 @@
 from datetime import datetime
 from sqlalchemy import (
     JSON,
-    BigInteger,
     Column,
-    DateTime,
     Float,
     Index,
     Integer,
     String,
     Text,
-    UniqueConstraint,
 )
 from app.db.session import Base
 
@@ -35,17 +32,3 @@ class Attraction(Base):
     monument_subtype = Column(String(100), nullable=True)
 
     wheelchair = Column(String(20), nullable=True, index=True)
-    # toilets_wheelchair = Column(String(20), nullable=True)
-    accessibility_tags = Column(JSON, nullable=True)
-
-    # address = Column(String(255), nullable=True)
-    # website = Column(String(500), nullable=True)
-    # opening_hours = Column(String(255), nullable=True)
-    # wikipedia = Column(String(255), nullable=True)
-    # wikidata = Column(String(50), nullable=True)
-    # image = Column(String(500), nullable=True)
-
-    # tags = Column(JSON, nullable=False, default=dict)
-
-    # created_at = Column(DateTime, default=datetime.utcnow)
-    # updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

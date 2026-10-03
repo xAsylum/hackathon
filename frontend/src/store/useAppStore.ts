@@ -11,7 +11,7 @@ interface AppState {
   routeData: RouteResponse | null;
 
   // Akcje
-  loadPlaces: () => Promise<void>;
+  loadPlaces: (filters?: import('../types').PlaceFilterParams) => Promise<void>;
   generateRoute: () => Promise<void>;
   setIsRouteGenerated: (value: boolean) => void;
   setPreferences: (prefs: Partial<UserPreferences>) => void;
@@ -35,9 +35,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   isLoading: false,
   routeData: null,
 
-  loadPlaces: async () => {
+  loadPlaces: async (filters) => {
     set({ isLoading: true });
-    const places = await fetchPlacesFromApi();
+    const places = await fetchPlacesFromApi(filters);
     set({ allPlaces: places, isLoading: false });
   },
 

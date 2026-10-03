@@ -1,22 +1,52 @@
-import { Place, RouteResponse, UserPreferences } from '../types';
+import { Place, PlaceFilterParams, RouteResponse, UserPreferences } from '../types';
 import { MOCK_PLACES } from '../data/mockPlaces';
 
 // Rzutowanie (import.meta as any) zapobiega błędowi TS2339
 const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8000';
 
-// 1. Pobieranie listy atrakcji z bazy danych
-export async function fetchPlacesFromApi(): Promise<Place[]> {
+// 1. Pobieranie listy atrakcji z bazy danych z obsługą filtrów wykluczających/włączających
+export async function fetchPlacesFromApi(filters?: PlaceFilterParams): Promise<Place[]> {
   try {
-    const res = await fetch(`${API_URL}/api/places`);
+    const params = new URLSearchParams();
+
+    if (filters?.categories && filters.categories.length > 0) {
+      params.set('categories', filters.categories.join(','));
+    }
+    if (filters?.excludeCategories && filters.excludeCategories.length > 0) {
+      params.set('exclude_categories', filters.excludeCategories.join(','));
+    }
+    if (filters?.accessibleOnly) {
+      params.set('accessible_only', 'true');
+    }
+    if (filters?.excludeIds && filters.excludeIds.length > 0) {
+      params.set('exclude_ids', filters.excludeIds.join(','));
+    }
+    if (filters?.search) {
+      params.set('search', filters.search);
+    }
+    if (filters?.limit) {
+      params.set('limit', String(filters.limit));
+    }
+    if (filters?.offset) {
+      params.set('offset', String(filters.offset));
+    }
+
+    const queryString = params.toString();
+    const url = `${API_URL}/api/places${queryString ? `?${queryString}` : ''}`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error('Błąd pobierania z API');
     const data = await res.json();
 
-    // Mapowanie odpowiedzi backendu (snake_case -> camelCase) z wartościami domyślnymi
-    return data.map((item: any) => ({
-      ...item,
-      isAccessible: item.isAccessible ?? item.is_accessible ?? true,
-      durationMinutes: item.durationMinutes ?? item.duration_minutes ?? 30,
-    }));
+    // Mapowanie odpowiedzi backendu z pełną zgodnością camelCase i snake_case
+    return data.map((item: any) => {
+      const isAcc = Boolean(item.isAccessible);
+      const dur = item.durationMinutes ?? 30;
+      return {
+        ...item,
+        isAccessible: isAcc,
+        durationMinutes: dur,
+      };
+    });
   } catch (err) {
     console.warn('Backend niedostępny – używam danych lokalnych (mock)', err);
     return MOCK_PLACES;

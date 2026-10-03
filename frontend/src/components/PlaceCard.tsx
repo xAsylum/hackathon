@@ -32,10 +32,10 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
         <div className="flex items-center gap-3 text-xs text-slate-400">
           <span className="flex items-center gap-1 text-[11px]">
             <Clock className="w-3 h-3 text-slate-500" />
-            {place.duration_minutes} min
+            {place.durationMinutes ?? place.duration_minutes ?? 30} min
           </span>
-          {place.is_accessible && (
-            <span title="Dostępne dla wózków" className="flex items-center">
+          {Boolean(place.isAccessible) && (
+            <span title="Dostępne dla wózków (wheelchair: yes/limited)" className="flex items-center">
               <Accessibility className="w-3 h-3 text-sky-400" />
             </span>
           )}
@@ -45,11 +45,10 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
         <button
           type="button"
           onClick={() => (isInCart ? removeFromCart(place.id) : addToCart(place))}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            isInCart
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isInCart
               ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
               : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
-          }`}
+            }`}
         >
           {isInCart ? (
             <>
