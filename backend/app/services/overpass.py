@@ -196,7 +196,7 @@ def parse_element(element: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     category, place_type = classification
 
     desc_parts = []
-    if base_desc := tags.get("description:en") or tags.get("description"):
+    if base_desc := tags.get("description:pl") or tags.get("description") or tags.get("description:en"):
         desc_parts.append(base_desc)
         
     compiled_description = "\n".join(desc_parts) if desc_parts else None

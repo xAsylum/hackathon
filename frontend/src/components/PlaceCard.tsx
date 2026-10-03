@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Check, Clock, Accessibility } from 'lucide-react';
-import { Place } from '../types';
+import { Place, getCategoryLabelPL } from '../types';
 import { useAppStore } from '../store/useAppStore.ts';
 
 interface PlaceCardProps {
@@ -10,6 +10,7 @@ interface PlaceCardProps {
 export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
   const { cart, addToCart, removeFromCart } = useAppStore();
   const isInCart = cart.some((item) => item.id === place.id);
+  const categoryLabel = getCategoryLabelPL(place.category);
 
   return (
     <div className="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col justify-between gap-3 group">
@@ -19,11 +20,11 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
             {place.name}
           </h4>
           <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50">
-            {place.category}
+            {categoryLabel}
           </span>
         </div>
         <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-          {place.description || `Atrakcja w kategorii ${place.category}`}
+          {place.description || `Atrakcja w kategorii: ${categoryLabel}`}
         </p>
       </div>
 
@@ -32,7 +33,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
         <div className="flex items-center gap-3 text-xs text-slate-400">
           <span className="flex items-center gap-1 text-[11px]">
             <Clock className="w-3 h-3 text-slate-500" />
-            {place.durationMinutes ?? place.duration_minutes ?? 30} min
+            {place.durationMinutes ?? 30} min
           </span>
           {Boolean(place.isAccessible) && (
             <span title="Dostępne dla wózków (wheelchair: yes/limited)" className="flex items-center">
@@ -46,8 +47,8 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
           type="button"
           onClick={() => (isInCart ? removeFromCart(place.id) : addToCart(place))}
           className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isInCart
-              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-              : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+            : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
             }`}
         >
           {isInCart ? (

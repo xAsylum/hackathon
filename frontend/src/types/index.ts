@@ -8,6 +8,22 @@ export type Category =
   | 'entertainment'
   | 'landmarks';
 
+export const CATEGORY_LABELS_PL: Record<string, string> = {
+  culture: 'Kultura',
+  nature: 'Przyroda & Parki',
+  food: 'Gastronomia',
+  history: 'Zabytki & Historia',
+  viewpoint: 'Punkt widokowy',
+  nightlife: 'Życie nocne',
+  entertainment: 'Rozrywka',
+  landmarks: 'Zabytki',
+};
+
+export function getCategoryLabelPL(category?: string): string {
+  if (!category) return 'Inne';
+  return CATEGORY_LABELS_PL[category.toLowerCase()] || category;
+}
+
 export type Mood = 'chill' | 'culture' | 'night_vibe' | 'quick_walk';
 
 export interface Place {
@@ -17,9 +33,7 @@ export interface Place {
   latitude: number;
   longitude: number;
   isAccessible: boolean;
-  is_accessible?: boolean;
   durationMinutes?: number;
-  duration_minutes?: number;
   description?: string;
   monument_type?: string;
   monument_subtype?: string;
