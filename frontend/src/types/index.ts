@@ -1,20 +1,25 @@
-export type Category = 'culture' | 'nature' | 'food' | 'history' | 'viewpoint';
+export type Category =
+  | 'landmarks'
+  | 'culture'
+  | 'nature'
+  | 'food and cuisine'
+  | 'entertainment'
+  | 'alcohol';
+
 export type Mood = 'chill' | 'culture' | 'night_vibe' | 'quick_walk';
 
 export interface Place {
   id: string | number;
   name: string;
   category: Category;
+  monument_type: string;
+  monument_subtype?: string;
   latitude: number;
   longitude: number;
   isAccessible: boolean;
-  isWellLit?: boolean;
-  isCommunitySubmitted?: boolean;
-  verification_votes?: number;
-  status?: string;
-  // Pola opcjonalne z domyślnym fallbackiem w UI
+  wheelchair?: string;
   description?: string;
-  durationMinutes?: number;
+  durationMinutes: number;
 }
 
 export interface UserPreferences {

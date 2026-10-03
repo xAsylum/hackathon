@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus, Check, Clock, Accessibility } from 'lucide-react';
 import { Place } from '../types';
-import { useAppStore } from '../store/useAppStore.ts';
+import { useAppStore } from '../store/useAppStore';
 
 interface PlaceCardProps {
   place: Place;
@@ -9,7 +9,12 @@ interface PlaceCardProps {
 
 export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
   const { cart, addToCart, removeFromCart } = useAppStore();
-  const isInCart = cart.some((item) => item.id === place.id);
+  const isInCart = cart.some((item) => String(item.id) === String(place.id));
+
+  // Przyjazny tag: "castle", "restaurant / vegan" itp.
+  const displayTag = place.monument_subtype
+    ? `${place.monument_type} • ${place.monument_subtype}`
+    : place.monument_type || place.category;
 
   return (
     <div className="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col justify-between gap-3 group">
@@ -18,30 +23,32 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
           <h4 className="font-semibold text-slate-100 text-sm leading-tight group-hover:text-emerald-300 transition-colors">
             {place.name}
           </h4>
-          <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50">
-            {place.category}
+          <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50 flex-shrink-0 max-w-[130px] truncate">
+            {displayTag}
           </span>
         </div>
-        <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-          {place.description || `Atrakcja w kategorii ${place.category}`}
-        </p>
+
+        {place.description && (
+          <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+            {place.description}
+          </p>
+        )}
       </div>
 
       <div className="flex items-center justify-between pt-2 border-t border-slate-800/60">
-        {/* Metadane Smart City */}
         <div className="flex items-center gap-3 text-xs text-slate-400">
           <span className="flex items-center gap-1 text-[11px]">
             <Clock className="w-3 h-3 text-slate-500" />
             {place.durationMinutes ?? 30} min
           </span>
           {place.isAccessible && (
-            <span title="Dostępne dla wózków" className="flex items-center">
-              <Accessibility className="w-3 h-3 text-sky-400" />
+            <span title={`Dostępność: ${place.wheelchair || 'tak'}`} className="flex items-center text-sky-400 gap-1 text-[11px]">
+              <Accessibility className="w-3 h-3" />
+              <span>Dostępne</span>
             </span>
           )}
         </div>
 
-        {/* Przycisk akcji */}
         <button
           type="button"
           onClick={() => (isInCart ? removeFromCart(place.id) : addToCart(place))}
