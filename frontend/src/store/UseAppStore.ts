@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import { Place, UserPreferences } from '../types';
-import { MOCK_PLACES } from '../data/mockPlaces';
+import { MOCK_PLACES } from '../data/MockPlaces';
 
 interface AppState {
   allPlaces: Place[];
   preferences: UserPreferences;
   cart: Place[];
+  cartWasModified: boolean;
   // Nowe: kontrola widoku
   isRouteGenerated: boolean;
   setIsRouteGenerated: (value: boolean) => void;
@@ -27,6 +28,7 @@ export const useAppStore = create<AppState>((set) => ({
     selectedCategories: ['culture', 'nature'],
   },
   cart: [],
+  cartWasModified: false,
   isRouteGenerated: false, // Domyślnie startujemy od pełnego ekranu konfiguracyjnego
 
   setIsRouteGenerated: (value) => set({ isRouteGenerated: value }),
@@ -37,12 +39,13 @@ export const useAppStore = create<AppState>((set) => ({
   addToCart: (place) =>
     set((state) => {
       if (state.cart.some((item) => item.id === place.id)) return state;
-      return { cart: [...state.cart, place] };
+      return { cart: [...state.cart, place], cartWasModified: true };
     }),
 
   removeFromCart: (placeId) =>
     set((state) => ({
       cart: state.cart.filter((item) => item.id !== placeId),
+      cartWasModified: true,
     })),
 
   moveCartItem: (index, direction) =>
@@ -55,5 +58,5 @@ export const useAppStore = create<AppState>((set) => ({
       return { cart: newCart };
     }),
 
-  clearCart: () => set({ cart: [] }),
+  clearCart: () => set({ cart: [], cartWasModified: true }),
 }));

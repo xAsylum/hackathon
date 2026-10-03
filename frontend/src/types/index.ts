@@ -23,3 +23,31 @@ export interface UserPreferences {
   accessibleOnly: boolean;
   selectedCategories: Category[];
 }
+
+export interface RouteSegmentProperties {
+  green: number;
+  traffic: number;
+  lit: boolean;
+  highway: string;
+}
+
+export interface RouteSegment {
+  type: 'Feature';
+  geometry: {
+    type: 'LineString';
+    coordinates: [number, number][];
+  };
+  properties: RouteSegmentProperties;
+}
+
+export interface RouteResponse {
+  stats: {
+    distance_m: number;
+    total_min: number;
+    pct_green: number;
+  };
+  route: {
+    type: 'FeatureCollection';
+    features: RouteSegment[];
+  };
+}
