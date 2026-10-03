@@ -1,7 +1,7 @@
-import type { RouteResponse } from '../types';
+import type { MapRouteData } from '../types';
 
 // Ten obiekt ma dokładnie taki sam kontrakt jak odpowiedź API.
-export const MOCK_ROUTE: RouteResponse = {
+export const MOCK_ROUTE: MapRouteData = {
   stats: {
     distance_m: 1208,
     total_min: 16,

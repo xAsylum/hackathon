@@ -11,16 +11,16 @@ import {
   TileLayer,
   useMap,
 } from 'react-leaflet';
-import type { Place, RouteResponse, RouteSegment } from '../types';
+import type { MapRouteData, Place, RouteSegment } from '../types';
 
 interface InteractiveMapProps {
-  data: RouteResponse;
+  data: MapRouteData;
   places: Place[];
-  onRemovePlace?: (placeId: string) => void;
+  onRemovePlace?: (placeId: string | number) => void;
 }
 
 interface FitMapProps {
-  route: RouteResponse['route'];
+  route: MapRouteData['route'];
   places: Place[];
 }
 
@@ -40,7 +40,7 @@ const CATEGORY_LABELS: Record<Place['category'], string> = {
   viewpoint: 'Punkt widokowy',
 };
 
-function featureCollection(features: RouteSegment[]): RouteResponse['route'] {
+function featureCollection(features: RouteSegment[]): MapRouteData['route'] {
   return { type: 'FeatureCollection', features };
 }
 
@@ -52,7 +52,7 @@ function FitMapToData({ route, places }: FitMapProps) {
       ...route.features.flatMap((feature) =>
         feature.geometry.coordinates.map(([lng, lat]) => [lat, lng] as L.LatLngTuple),
       ),
-      ...places.map(({ coordinates }) => [coordinates.lat, coordinates.lng] as L.LatLngTuple),
+      ...places.map(({ latitude, longitude }) => [latitude, longitude] as L.LatLngTuple),
     ];
 
     if (points.length > 0) {
@@ -146,7 +146,7 @@ export function InteractiveMap({ data, places, onRemovePlace }: InteractiveMapPr
             {places.map((place) => (
               <Marker
                 key={place.id}
-                position={[place.coordinates.lat, place.coordinates.lng]}
+                position={[place.latitude, place.longitude]}
                 icon={poiIcon(place)}
               >
                 <Popup>
@@ -157,11 +157,11 @@ export function InteractiveMap({ data, places, onRemovePlace }: InteractiveMapPr
                     <dl>
                       <div>
                         <dt>Czas</dt>
-                        <dd>{place.durationMinutes} min</dd>
+                        <dd>{place.durationMinutes ?? 30} min</dd>
                       </div>
                       <div>
                         <dt>Oświetlenie</dt>
-                        <dd>{place.isWellLit ? 'Tak' : 'Nie'}</dd>
+                        <dd>{place.isWellLit == null ? 'Brak danych' : place.isWellLit ? 'Tak' : 'Nie'}</dd>
                       </div>
                       <div>
                         <dt>Bez barier</dt>

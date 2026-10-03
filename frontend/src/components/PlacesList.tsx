@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useAppStore } from '../store/UseAppStore.ts';
+import { useAppStore } from '../store/useAppStore.ts';
 import { PlaceCard } from './PlaceCard.tsx';
 import { Compass } from 'lucide-react';
 
@@ -22,7 +22,7 @@ export const PlacesList: React.FC = () => {
       }
 
       // Wymóg oświetlenia po zmroku
-      if (preferences.prioritizeWellLit && !place.isWellLit) {
+      if (preferences.prioritizeWellLit && place.isWellLit === false) {
         return false;
       }
 

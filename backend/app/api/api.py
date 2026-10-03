@@ -1,7 +1,12 @@
 from fastapi import APIRouter
-from app.api.endpoints import health, items
+from app.api.endpoints import attractions
 
 api_router = APIRouter()
 
-api_router.include_router(health.router, tags=["Health"])
-api_router.include_router(items.router, prefix="/items", tags=["Items"])
+
+@api_router.get("/health", tags=["Health"])
+def health():
+    return {"status": "ok"}
+
+
+api_router.include_router(attractions.router, prefix="/attractions", tags=["Attractions"])

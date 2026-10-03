@@ -2,18 +2,19 @@ export type Category = 'culture' | 'nature' | 'food' | 'history' | 'viewpoint';
 export type Mood = 'chill' | 'culture' | 'night_vibe' | 'quick_walk';
 
 export interface Place {
-  id: string;
+  id: string | number;
   name: string;
   category: Category;
-  description: string;
-  durationMinutes: number;
-  coordinates: {
-    lat: number;
-    lng: number;
-  };
-  isWellLit: boolean;          // kluczowe pod nocne trasy
-  isAccessible: boolean;       // bez barier / wózki
-  imageUrl?: string;
+  latitude: number;
+  longitude: number;
+  isAccessible: boolean;
+  isWellLit?: boolean;
+  isCommunitySubmitted?: boolean;
+  verification_votes?: number;
+  status?: string;
+  // Pola opcjonalne z domyślnym fallbackiem w UI
+  description?: string;
+  durationMinutes?: number;
 }
 
 export interface UserPreferences {
@@ -40,14 +41,27 @@ export interface RouteSegment {
   properties: RouteSegmentProperties;
 }
 
-export interface RouteResponse {
+export interface RouteFeatureCollection {
+  type: 'FeatureCollection';
+  features: RouteSegment[];
+}
+
+export interface MapRouteData {
   stats: {
     distance_m: number;
     total_min: number;
     pct_green: number;
   };
-  route: {
-    type: 'FeatureCollection';
-    features: RouteSegment[];
-  };
+  route: RouteFeatureCollection;
+}
+
+export interface RouteResponse {
+  distance_meters: number;
+  duration_seconds: number;
+  geojson:
+    | RouteFeatureCollection
+    | {
+        type: 'LineString';
+        coordinates: [number, number][];
+      };
 }

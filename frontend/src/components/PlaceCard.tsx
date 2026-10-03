@@ -1,7 +1,7 @@
 import React from 'react';
-import { Plus, Check, Clock, Shield, Accessibility } from 'lucide-react';
+import { Plus, Check, Clock, Accessibility } from 'lucide-react';
 import { Place } from '../types';
-import { useAppStore } from '../store/UseAppStore.ts';
+import { useAppStore } from '../store/useAppStore.ts';
 
 interface PlaceCardProps {
   place: Place;
@@ -23,7 +23,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
           </span>
         </div>
         <p className="text-xs text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-          {place.description}
+          {place.description || `Atrakcja w kategorii ${place.category}`}
         </p>
       </div>
 
@@ -32,13 +32,8 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
         <div className="flex items-center gap-3 text-xs text-slate-400">
           <span className="flex items-center gap-1 text-[11px]">
             <Clock className="w-3 h-3 text-slate-500" />
-            {place.durationMinutes} min
+            {place.durationMinutes ?? 30} min
           </span>
-          {place.isWellLit && (
-            <span title="Dobre oświetlenie nocne" className="flex items-center">
-              <Shield className="w-3 h-3 text-amber-400" />
-            </span>
-          )}
           {place.isAccessible && (
             <span title="Dostępne dla wózków" className="flex items-center">
               <Accessibility className="w-3 h-3 text-sky-400" />

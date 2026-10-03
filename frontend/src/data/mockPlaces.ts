@@ -7,8 +7,8 @@ export const MOCK_PLACES: Place[] = [
     category: 'history',
     description: 'Renesansowa rezydencja królów polskich na Wzgórzu Wawelskim.',
     durationMinutes: 60,
-    coordinates: { lat: 50.0540, lng: 19.9354 },
-    isWellLit: true,
+    latitude: 50.0540,
+    longitude: 19.9354,
     isAccessible: false,
   },
   {
@@ -17,8 +17,8 @@ export const MOCK_PLACES: Place[] = [
     category: 'culture',
     description: 'Serce miasta, zabytkowe kramy i stałe oświetlenie miejskie.',
     durationMinutes: 40,
-    coordinates: { lat: 50.0619, lng: 19.9373 },
-    isWellLit: true,
+    latitude: 50.0619,
+    longitude: 19.9373,
     isAccessible: true,
   },
   {
@@ -27,8 +27,8 @@ export const MOCK_PLACES: Place[] = [
     category: 'nature',
     description: 'Zielony pierścień wokół Starego Miasta, cichy trakt spacerowy.',
     durationMinutes: 30,
-    coordinates: { lat: 50.0582, lng: 19.9395 },
-    isWellLit: true,
+    latitude: 50.0582,
+    longitude: 19.9395,
     isAccessible: true,
   },
   {
@@ -37,8 +37,8 @@ export const MOCK_PLACES: Place[] = [
     category: 'food',
     description: 'Kultowy okrąglak z zapiekankami i tętniące życiem kawiarnie.',
     durationMinutes: 45,
-    coordinates: { lat: 50.0518, lng: 19.9450 },
-    isWellLit: true,
+    latitude: 50.0518,
+    longitude: 19.9450,
     isAccessible: true,
   },
   {
@@ -47,8 +47,8 @@ export const MOCK_PLACES: Place[] = [
     category: 'viewpoint',
     description: 'Most pieszo-rowerowy łączący Kazimierz z Podgórzem, podświetlany nocą.',
     durationMinutes: 20,
-    coordinates: { lat: 50.0465, lng: 19.9482 },
-    isWellLit: true,
+    latitude: 50.0465,
+    longitude: 19.9482,
     isAccessible: true,
   },
   {
@@ -57,8 +57,8 @@ export const MOCK_PLACES: Place[] = [
     category: 'viewpoint',
     description: 'Najstarszy punkt widokowy z panoramą całego Krakowa.',
     durationMinutes: 50,
-    coordinates: { lat: 50.0380, lng: 19.9585 },
-    isWellLit: false,
+    latitude: 50.0380,
+    longitude: 19.9585,
     isAccessible: false,
   }
 ];
