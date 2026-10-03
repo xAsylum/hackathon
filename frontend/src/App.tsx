@@ -1,82 +1,48 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { api, HealthResponse, Item, ItemCreateInput } from './api/client';
-import { Header } from './components/Header';
-import { StatusCards } from './components/StatusCard';
-import { ItemList } from './components/ItemList';
+import React from 'react';
+import { Compass, ShoppingBag, Map as MapIcon } from 'lucide-react';
+import { useAppStore } from './store/use_app_store';
 
-export const App: React.FC = () => {
-  const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [healthLoading, setHealthLoading] = useState<boolean>(true);
-  const [healthError, setHealthError] = useState<string | null>(null);
-
-  const [items, setItems] = useState<Item[]>([]);
-  const [itemsLoading, setItemsLoading] = useState<boolean>(false);
-
-  const fetchHealth = useCallback(async () => {
-    try {
-      setHealthLoading(true);
-      const data = await api.getHealth();
-      setHealth(data);
-      setHealthError(null);
-    } catch (err: any) {
-      setHealthError(err.message || 'Failed to connect to backend');
-      setHealth(null);
-    } finally {
-      setHealthLoading(false);
-    }
-  }, []);
-
-  const fetchItems = useCallback(async () => {
-    try {
-      setItemsLoading(true);
-      const data = await api.getItems();
-      setItems(data);
-    } catch (err) {
-      console.error('Failed to fetch items:', err);
-    } finally {
-      setItemsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchHealth();
-    fetchItems();
-    const interval = setInterval(fetchHealth, 10000);
-    return () => clearInterval(interval);
-  }, [fetchHealth, fetchItems]);
-
-  const handleAddItem = async (item: ItemCreateInput) => {
-    try {
-      const newItem = await api.createItem(item);
-      setItems((prev) => [newItem, ...prev]);
-    } catch (err) {
-      alert('Error creating item. Check if backend is running.');
-      console.error(err);
-    }
-  };
-
-  const handleDeleteItem = async (id: number) => {
-    try {
-      await api.deleteItem(id);
-      setItems((prev) => prev.filter((item) => item.id !== id));
-    } catch (err) {
-      alert('Error deleting item.');
-      console.error(err);
-    }
-  };
+export default function App() {
+  const { cart } = useAppStore();
 
   return (
-    <div className="app-container">
-      <Header />
-      <StatusCards health={health} loading={healthLoading} error={healthError} />
-      <ItemList
-        items={items}
-        loading={itemsLoading}
-        onAddItem={handleAddItem}
-        onDeleteItem={handleDeleteItem}
-      />
+    <div className="flex h-screen w-screen overflow-hidden bg-slate-900 text-slate-100 font-sans">
+      {/* LEWY PANEL (Alicja): Formularz i Koszyk */}
+      <aside className="w-[420px] flex-shrink-0 h-full flex flex-col border-r border-slate-800 bg-slate-950">
+        <header className="p-4 border-b border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Compass className="w-6 h-6 text-emerald-400" />
+            <h1 className="font-bold text-lg tracking-wide text-white">Detour</h1>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs bg-slate-800 px-2.5 py-1 rounded-full text-slate-300">
+            <ShoppingBag className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{cart.length} przystanków</span>
+          </div>
+        </header>
+
+        {/* Miejsce na Formularz i Karty (Faza 2) */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <section className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-sm text-slate-400">
+            <p className="font-semibold text-slate-200 mb-1">Sekcja preferencji i filtrów</p>
+            <p>Tutaj w Fazie 2 umieścimy Mood, Czas oraz przełączniki Smart City.</p>
+          </section>
+
+          <section className="bg-slate-900 p-4 rounded-xl border border-slate-800 text-sm text-slate-400">
+            <p className="font-semibold text-slate-200 mb-1">Sekcja koszyka trasy</p>
+            <p>Tutaj w Fazie 3 pojawi się lista wybranych przystanków ze zmianą kolejności.</p>
+          </section>
+        </div>
+      </aside>
+
+      {/* PRAWY OBSZAR: Kontener pod Mapę */}
+      <main className="flex-1 h-full relative bg-slate-900 flex items-center justify-center">
+        <div id="map-container" className="absolute inset-0 flex items-center justify-center text-slate-500">
+          <div className="text-center space-y-2">
+            <MapIcon className="w-12 h-12 mx-auto stroke-1 animate-pulse" />
+            <p className="text-sm">Tu wepnij kontener Leaflet / MapLibre</p>
+          </div>
+        </div>
+      </main>
     </div>
   );
-};
-
-export default App;
+}
