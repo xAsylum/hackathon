@@ -32,9 +32,9 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
         <div className="flex items-center gap-3 text-xs text-slate-400">
           <span className="flex items-center gap-1 text-[11px]">
             <Clock className="w-3 h-3 text-slate-500" />
-            {place.duration_minutes} min
+            {place.durationMinutes ?? 30} min
           </span>
-          {place.is_accessible && (
+          {place.isAccessible && (
             <span title="Dostępne dla wózków" className="flex items-center">
               <Accessibility className="w-3 h-3 text-sky-400" />
             </span>
