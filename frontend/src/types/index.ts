@@ -12,8 +12,6 @@ export interface Place {
   id: string | number;
   name: string;
   category: Category;
-  monument_type: string;
-  monument_subtype?: string;
   latitude: number;
   longitude: number;
   isAccessible: boolean;
@@ -71,4 +69,18 @@ export interface RouteResponse {
         type: 'LineString';
         coordinates: [number, number][];
       };
+}
+
+export const CATEGORY_LABELS_PL: Record<string, string> = {
+  landmarks: 'Zabytki & Widoki',
+  culture: 'Kultura & Sztuka',
+  nature: 'Parki & Zieleń',
+  'food and cuisine': 'Gastronomia',
+  entertainment: 'Rozrywka',
+  alcohol: 'Bary & Puby',
+};
+
+export function getCategoryLabelPL(category?: string): string {
+  if (!category) return 'Inne';
+  return CATEGORY_LABELS_PL[category.toLowerCase()] || category;
 }
