@@ -19,14 +19,9 @@ class Attraction(Base):
 
     __tablename__ = "attractions"
     __table_args__ = (
-        UniqueConstraint("osm_type", "osm_id", name="uq_attraction_osm"),
         Index("ix_attraction_lat_lon", "latitude", "longitude"),
     )
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-
-    osm_type = Column(String(10), nullable=False)
-    osm_id = Column(BigInteger, nullable=False)
+    id = Column(Integer, primary_key=True, index=True, nullable=False)
 
     # Basic info
     name = Column(String(255), nullable=False, index=True)
@@ -40,18 +35,17 @@ class Attraction(Base):
     monument_subtype = Column(String(100), nullable=True)
 
     wheelchair = Column(String(20), nullable=True, index=True)
-    wheelchair_description = Column(Text, nullable=True)
-    toilets_wheelchair = Column(String(20), nullable=True)
+    # toilets_wheelchair = Column(String(20), nullable=True)
     accessibility_tags = Column(JSON, nullable=True)
 
-    address = Column(String(255), nullable=True)
-    website = Column(String(500), nullable=True)
-    opening_hours = Column(String(255), nullable=True)
-    wikipedia = Column(String(255), nullable=True)
-    wikidata = Column(String(50), nullable=True)
-    image = Column(String(500), nullable=True)
+    # address = Column(String(255), nullable=True)
+    # website = Column(String(500), nullable=True)
+    # opening_hours = Column(String(255), nullable=True)
+    # wikipedia = Column(String(255), nullable=True)
+    # wikidata = Column(String(50), nullable=True)
+    # image = Column(String(500), nullable=True)
 
-    tags = Column(JSON, nullable=False, default=dict)
+    # tags = Column(JSON, nullable=False, default=dict)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    # created_at = Column(DateTime, default=datetime.utcnow)
+    # updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
