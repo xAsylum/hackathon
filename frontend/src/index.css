@@ -2,8 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* #region global */
+@font-face {
+    font-family: 'jost';
+    src: url('fonts/jost.ttf');
+}
+
+*{
+    /* font-family: 'jost', serif; */
+}
+
 :root {
-  --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-card: rgba(30, 41, 59, 0.7);
   --bg-input: #0b1120;
