@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.endpoints import attractions
+from app.api.endpoints import attractions, routing
 
 api_router = APIRouter()
 
@@ -10,3 +10,4 @@ def health():
 
 
 api_router.include_router(attractions.router, prefix="/attractions", tags=["Attractions"])
+api_router.include_router(routing.router, prefix="/routing", tags=["Routing"])
