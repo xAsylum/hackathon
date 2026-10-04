@@ -5,9 +5,11 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-# Set environment variables
+# Set environment variables - instalujemy venv w /opt/venv poza montowanym /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
 
 # Install system dependencies if required (sqlite3, curl for healthchecks)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -18,12 +20,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # 2. Kopiujemy pliki zależności uv
 COPY pyproject.toml uv.lock ./
 
-# 3. Instalujemy zależności bez zbędnych pakietów deweloperskich
+# 3. Instalujemy zależności do /opt/venv (w tym networkx i osmnx)
 RUN uv sync --frozen --no-dev
-
-# 4. Dodajemy utworzone przez uv środowisko wirtualne do PATH
-# Dzięki temu system widzi uvicorna i wszystkie zainstalowane paczki bez wpisywania "uv run"
-ENV PATH="/app/.venv/bin:$PATH"
 
 # Create directory for SQLite storage
 RUN mkdir -p /app/data
@@ -33,5 +31,5 @@ COPY . .
 
 EXPOSE 8000
 
-# Komenda startowa pozostaje bez zmian
+# Komenda startowa
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

@@ -19,9 +19,24 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     if settings.SEED_ATTRACTIONS_ON_STARTUP:
         seed_on_startup()
+        
+    # Load NetworkX Graph for green routing
+    import osmnx as ox
+    graph_path = "/app/data/krakow_green.graphml" if os.environ.get("DATABASE_URL") else "data/krakow_green.graphml" # Docker vs Local path handling
+    if os.path.exists(graph_path):
+        print(f"Loading routing graph from {graph_path}...")
+        try:
+            app.state.graph = ox.load_graphml(graph_path)
+            print("Graph loaded successfully.")
+        except Exception as e:
+            print(f"Failed to load graph: {e}")
+            app.state.graph = None
+    else:
+        print(f"Warning: {graph_path} not found. Run the green_score_krakow.py script first.")
+        app.state.graph = None
+        
     seed_featured_likes()
     yield
-
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
