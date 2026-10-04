@@ -12,14 +12,20 @@ export interface Place {
   id: string | number;
   name: string;
   category: Category;
-  latitude: number;
-  longitude: number;
-  isAccessible: boolean;
-  wheelchair?: string;
   description?: string;
   durationMinutes?: number;
+  latitude: number;
+  longitude: number;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  isWellLit?: boolean;
+  isAccessible?: boolean;
+  wheelchair?: string;
   monument_type?: string;
   monument_subtype?: string;
+  imageUrl?: string;
 }
 
 export interface UserPreferences {
@@ -31,10 +37,10 @@ export interface UserPreferences {
 }
 
 export interface RouteSegmentProperties {
-  green: number;
-  traffic: number;
-  lit: boolean;
-  highway: string;
+  green?: number;
+  traffic?: number;
+  lit?: boolean;
+  highway?: string;
 }
 
 export interface RouteSegment {
@@ -46,29 +52,17 @@ export interface RouteSegment {
   properties: RouteSegmentProperties;
 }
 
-export interface RouteFeatureCollection {
-  type: 'FeatureCollection';
-  features: RouteSegment[];
-}
-
-export interface MapRouteData {
+export interface RouteResponse {
   stats: {
     distance_m: number;
     total_min: number;
     pct_green: number;
   };
-  route: RouteFeatureCollection;
-}
-
-export interface RouteResponse {
-  distance_meters: number;
-  duration_seconds: number;
-  geojson:
-    | RouteFeatureCollection
-    | {
-        type: 'LineString';
-        coordinates: [number, number][];
-      };
+  route: {
+    type: 'FeatureCollection';
+    features: RouteSegment[];
+  };
+  geojson?: any;
 }
 
 export const CATEGORY_LABELS_PL: Record<string, string> = {
