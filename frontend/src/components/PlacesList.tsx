@@ -39,13 +39,13 @@ const SearchBar: React.FC<SearchBarProps> = React.memo(({ onSearch, isLoading, a
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Szukaj atrakcji (np. Wawel, Sukiennice, park)..."
-          className="w-full pl-10 pr-9 py-2.5 bg-slate-900/90 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-inner"
+          className="w-full pl-10 pr-9 py-2.5 bg-neutral-100 border border-emerald-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800 focus:border-emerald-500 transition-all shadow-inner"
         />
         {value && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 transition-colors"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-800 hover:text-emerald-600 transition-colors"
             title="Wyczyść tekst"
           >
             <X className="w-3.5 h-3.5" />
@@ -56,7 +56,7 @@ const SearchBar: React.FC<SearchBarProps> = React.memo(({ onSearch, isLoading, a
       <button
         type="submit"
         disabled={isLoading}
-        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-medium text-xs sm:text-sm transition-all shadow-sm flex-shrink-0 cursor-pointer active:scale-95"
+        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-600 disabled:opacity-50 text-neutral-200 font-medium text-xs sm:text-sm transition-all shadow-sm flex-shrink-0 cursor-pointer active:scale-95"
         title="Szukaj (Enter)"
       >
         {isLoading ? (
@@ -135,7 +135,7 @@ export const PlacesList: React.FC = () => {
       />
 
       {/* Belka informacyjna o aktywnych filtrach i wynikach */}
-      <div className="flex items-center justify-between text-xs text-slate-400 px-1 pt-1">
+      <div className="flex items-center justify-between text-xs text-emerald-800 px-1 pt-1">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span>Atrakcje</span>
 
@@ -154,7 +154,7 @@ export const PlacesList: React.FC = () => {
           )}
 
           {activeFiltersCount > 0 && (
-            <span className="bg-slate-800/80 px-2 py-0.5 rounded-full text-[10px] text-sky-400 border border-slate-700/50 flex items-center gap-1">
+            <span className="bg-neutral-200 px-2 py-0.5 rounded-full text-[10px] text-emerald-800 border border-emerald-800   flex items-center gap-1">
               <Filter className="w-2.5 h-2.5" />
               {preferences.selectedCategories.length > 0 &&
                 `${preferences.selectedCategories.length} kat.`}
@@ -167,7 +167,7 @@ export const PlacesList: React.FC = () => {
           )}
         </div>
 
-        <span className="text-slate-400">
+        <span className="text-emerald-800">
           {visiblePlaces.length < filteredPlaces.length
             ? `${visiblePlaces.length} z ${filteredPlaces.length} miejsc`
             : `${filteredPlaces.length} miejsc`}
