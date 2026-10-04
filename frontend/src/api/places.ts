@@ -98,6 +98,22 @@ export async function calculateRouteApi(
   places: Place[],
   preferences: UserPreferences
 ): Promise<RouteResponse | null> {
+  if (places.length < 2) {
+    return {
+      distance_meters: 0,
+      duration_seconds: 0,
+      stats: {
+        distance_m: 0,
+        total_min: 0,
+        pct_green: 0,
+      },
+      geojson: {
+        type: 'FeatureCollection',
+        features: [],
+      },
+    };
+  }
+
   try {
     const res = await fetch(`${API_URL}/api/route/optimize`, {
       method: 'POST',
@@ -105,8 +121,8 @@ export async function calculateRouteApi(
       body: JSON.stringify({
         waypoints: places.map((p) => ({
           id: p.id,
-          lat: p.latitude,
-          lng: p.longitude,
+          lat: p.latitude ?? p.coordinates?.lat ?? 0,
+          lng: p.longitude ?? p.coordinates?.lng ?? 0,
         })),
         accessible_only: preferences.accessibleOnly,
         prioritize_lit: preferences.prioritizeWellLit,

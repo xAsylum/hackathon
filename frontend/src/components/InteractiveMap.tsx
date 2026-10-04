@@ -136,8 +136,9 @@ export function InteractiveMap({
 
   // Wymuszenie odświeżenia warstwy GeoJSON w Leaflet po przeliczeniu trasy
   const routeKey = useMemo(
-    () => `${data?.route?.features?.length ?? 0}-${JSON.stringify(data?.stats ?? {})}`,
-    [data],
+    () =>
+      `${places.map((p) => p.id).join('-')}-${data?.route?.features?.length ?? 0}-${JSON.stringify(data?.stats ?? {})}`,
+    [data, places],
   );
 
   return (

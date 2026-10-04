@@ -258,17 +258,9 @@ def optimize_route(request: Request, payload: OptimizeRouteRequest):
     """
     waypoints = payload.waypoints
     if len(waypoints) < 2:
-        coords = [[wp.lng, wp.lat] for wp in waypoints]
         empty_fc = RouteFeatureCollection(
             type="FeatureCollection",
-            features=[
-                RouteSegment(
-                    geometry={"type": "LineString", "coordinates": coords},
-                    properties=RouteSegmentProperties(
-                        green=0.0, traffic=0.0, lit=False, highway="pedestrian"
-                    ),
-                )
-            ],
+            features=[],
         )
         return OptimizeRouteResponse(
             distance_meters=0.0,
@@ -334,6 +326,9 @@ def optimize_route(request: Request, payload: OptimizeRouteRequest):
         wp_start = waypoints[i]
         wp_end = waypoints[i + 1]
 
+        wp_start_pt = [float(wp_start.lng), float(wp_start.lat)]
+        wp_end_pt = [float(wp_end.lng), float(wp_end.lat)]
+
         leg_found = False
 
         if G is not None and grid is not None:
@@ -344,11 +339,59 @@ def optimize_route(request: Request, payload: OptimizeRouteRequest):
                 if start_node is not None and end_node is not None:
                     path_nodes = nx.shortest_path(G, start_node, end_node, weight=green_cost)
 
+                    node_start = G.nodes[start_node]
+                    node_start_x = float(node_start["x"])
+                    node_start_y = float(node_start["y"])
+                    start_node_pt = [node_start_x, node_start_y]
+
+                    # 1. Uzupelnienie od kropki (wp_start) do pierwszego wezla grafu ulic
+                    gap_to_start = haversine_distance(wp_start.lat, wp_start.lng, node_start_y, node_start_x)
+                    if gap_to_start > 1.0:
+                        from_pt = wp_start_pt
+                        if features:
+                            prev_end = features[-1].geometry["coordinates"][-1]
+                            if haversine_distance(prev_end[1], prev_end[0], wp_start.lat, wp_start.lng) < 20.0:
+                                from_pt = prev_end
+                        features.append(
+                            RouteSegment(
+                                type="Feature",
+                                geometry={"type": "LineString", "coordinates": [from_pt, start_node_pt]},
+                                properties=RouteSegmentProperties(
+                                    green=0.0,
+                                    traffic=0.0,
+                                    lit=False,
+                                    highway="footway",
+                                ),
+                            )
+                        )
+                        total_distance_m += gap_to_start
+
+                    # 2. Przebieg przez sciezke grafu
                     for j in range(len(path_nodes) - 1):
                         u = path_nodes[j]
                         v = path_nodes[j + 1]
+                        node_u = G.nodes[u]
+                        node_v = G.nodes[v]
+                        u_x, u_y = float(node_u["x"]), float(node_u["y"])
+                        v_x, v_y = float(node_v["x"]), float(node_v["y"])
+
                         edge_dict = G.get_edge_data(u, v)
                         if not edge_dict:
+                            # Brak danych krawedzi - uzupelnienie pomiedzy u i v bez zieleni/oswietlenia
+                            gap_uv = haversine_distance(u_y, u_x, v_y, v_x)
+                            features.append(
+                                RouteSegment(
+                                    type="Feature",
+                                    geometry={"type": "LineString", "coordinates": [[u_x, u_y], [v_x, v_y]]},
+                                    properties=RouteSegmentProperties(
+                                        green=0.0,
+                                        traffic=0.0,
+                                        lit=False,
+                                        highway="footway",
+                                    ),
+                                )
+                            )
+                            total_distance_m += gap_uv
                             continue
 
                         # Select lowest cost edge if multi-edge
@@ -364,31 +407,75 @@ def optimize_route(request: Request, payload: OptimizeRouteRequest):
                         traffic = get_traffic_level(highway_str)
                         lit = is_edge_lit(data, highway_str)
 
-                        if "geometry" in data:
-                            seg_coords = [[float(c[0]), float(c[1])] for c in data["geometry"].coords]
+                        if "geometry" in data and data["geometry"] is not None:
+                            raw_coords = [[float(c[0]), float(c[1])] for c in data["geometry"].coords]
+                            if len(raw_coords) >= 2:
+                                # Ustalenie wlasciwego kierunku u -> v
+                                d_start_u = (raw_coords[0][0] - u_x) ** 2 + (raw_coords[0][1] - u_y) ** 2
+                                d_end_u = (raw_coords[-1][0] - u_x) ** 2 + (raw_coords[-1][1] - u_y) ** 2
+                                if d_end_u < d_start_u:
+                                    raw_coords.reverse()
+                                seg_coords = raw_coords
+                            else:
+                                seg_coords = [[u_x, u_y], [v_x, v_y]]
                         else:
-                            node_u = G.nodes[u]
-                            node_v = G.nodes[v]
-                            seg_coords = [
-                                [float(node_u["x"]), float(node_u["y"])],
-                                [float(node_u["x"]), float(node_u["y"])],
-                            ]
+                            # Prawidlowy odcinek prostopadly od u do v (poprzednio node_u powielone)
+                            seg_coords = [[u_x, u_y], [v_x, v_y]]
 
-                        if len(seg_coords) >= 2:
-                            features.append(
-                                RouteSegment(
-                                    type="Feature",
-                                    geometry={"type": "LineString", "coordinates": seg_coords},
-                                    properties=RouteSegmentProperties(
-                                        green=round(green, 2),
-                                        traffic=round(traffic, 2),
-                                        lit=lit,
-                                        highway=highway_str,
-                                    ),
+                        # Mostkowanie ewentualnych mikrodziur miedzy segmentami
+                        if features:
+                            prev_end = features[-1].geometry["coordinates"][-1]
+                            dist_to_prev = haversine_distance(prev_end[1], prev_end[0], seg_coords[0][1], seg_coords[0][0])
+                            if dist_to_prev > 1.0:
+                                features.append(
+                                    RouteSegment(
+                                        type="Feature",
+                                        geometry={"type": "LineString", "coordinates": [prev_end, seg_coords[0]]},
+                                        properties=RouteSegmentProperties(
+                                            green=0.0,
+                                            traffic=0.0,
+                                            lit=False,
+                                            highway="footway",
+                                        ),
+                                    )
                                 )
+                                total_distance_m += dist_to_prev
+
+                        features.append(
+                            RouteSegment(
+                                type="Feature",
+                                geometry={"type": "LineString", "coordinates": seg_coords},
+                                properties=RouteSegmentProperties(
+                                    green=round(green, 2),
+                                    traffic=round(traffic, 2),
+                                    lit=lit,
+                                    highway=highway_str,
+                                ),
                             )
-                            total_distance_m += length
-                            weighted_green_sum += green * length
+                        )
+                        total_distance_m += length
+                        weighted_green_sum += green * length
+
+                    # 3. Uzupelnienie od ostatniego wezla grafu do kropki koncowej (wp_end)
+                    node_end = G.nodes[end_node]
+                    node_end_x = float(node_end["x"])
+                    node_end_y = float(node_end["y"])
+                    gap_to_end = haversine_distance(node_end_y, node_end_x, wp_end.lat, wp_end.lng)
+                    if gap_to_end > 1.0:
+                        last_pt = features[-1].geometry["coordinates"][-1] if features else [node_end_x, node_end_y]
+                        features.append(
+                            RouteSegment(
+                                type="Feature",
+                                geometry={"type": "LineString", "coordinates": [last_pt, wp_end_pt]},
+                                properties=RouteSegmentProperties(
+                                    green=0.0,
+                                    traffic=0.0,
+                                    lit=False,
+                                    highway="footway",
+                                ),
+                            )
+                        )
+                        total_distance_m += gap_to_end
 
                     leg_found = True
             except Exception:
@@ -397,21 +484,20 @@ def optimize_route(request: Request, payload: OptimizeRouteRequest):
         # Fallback to direct leg if graph routing was not possible
         if not leg_found:
             direct_dist = haversine_distance(wp_start.lat, wp_start.lng, wp_end.lat, wp_end.lng)
-            direct_coords = [[wp_start.lng, wp_start.lat], [wp_end.lng, wp_end.lat]]
+            from_pt = features[-1].geometry["coordinates"][-1] if features else wp_start_pt
             features.append(
                 RouteSegment(
                     type="Feature",
-                    geometry={"type": "LineString", "coordinates": direct_coords},
+                    geometry={"type": "LineString", "coordinates": [from_pt, wp_end_pt]},
                     properties=RouteSegmentProperties(
-                        green=0.3,
-                        traffic=0.1,
-                        lit=True,
+                        green=0.0,
+                        traffic=0.0,
+                        lit=False,
                         highway="footway",
                     ),
                 )
             )
             total_distance_m += direct_dist
-            weighted_green_sum += 0.3 * direct_dist
 
     # Percentage of greenness along the route
     pct_green = round((weighted_green_sum / total_distance_m * 100.0) if total_distance_m > 0 else 0.0, 1)

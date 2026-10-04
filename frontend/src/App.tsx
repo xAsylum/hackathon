@@ -16,8 +16,20 @@ import { InteractiveMap } from './components/InteractiveMap';
 import { MOCK_ROUTE } from './data/mockRoute';
 import type { MapRouteData, RouteResponse } from './types';
 
+const EMPTY_ROUTE_DATA: MapRouteData = {
+  stats: {
+    distance_m: 0,
+    total_min: 0,
+    pct_green: 0,
+  },
+  route: {
+    type: 'FeatureCollection',
+    features: [],
+  },
+};
+
 function asMapRouteData(routeData: RouteResponse | null): MapRouteData {
-  if (!routeData) return MOCK_ROUTE;
+  if (!routeData) return EMPTY_ROUTE_DATA;
 
   const route =
     routeData.geojson.type === 'FeatureCollection'
@@ -39,7 +51,7 @@ function asMapRouteData(routeData: RouteResponse | null): MapRouteData {
         };
 
   return {
-    stats: {
+    stats: routeData.stats ?? {
       distance_m: routeData.distance_meters,
       total_min: Math.round(routeData.duration_seconds / 60),
       pct_green: 0,
@@ -190,9 +202,27 @@ export default function App() {
 
         <div className="flex-1 overflow-y-auto p-4 space-y-5">
           <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3">
-            <p className="mb-3 text-xs font-semibold text-emerald-300">
-              Trasa wygenerowana pomyślnie
-            </p>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                    <span>Przeliczanie nowej trasy...</span>
+                  </>
+                ) : (
+                  <span>
+                    {cart.length < 2
+                      ? 'Dodaj min. 2 punkty do trasy'
+                      : 'Trasa zaktualizowana'}
+                  </span>
+                )}
+              </p>
+              {isLoading && (
+                <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30 animate-pulse">
+                  Aktualizacja...
+                </span>
+              )}
+            </div>
             <dl className="grid grid-cols-3 gap-2 text-center">
               <div>
                 <dt className="text-[10px] uppercase tracking-wide text-slate-500">Dystans</dt>

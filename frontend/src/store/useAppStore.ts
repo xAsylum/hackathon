@@ -6,6 +6,8 @@ import {
   setAttractionLike,
 } from '../api/places';
 
+let activeRouteRequestId = 0;
+
 const sortByLikes = (places: Place[]): Place[] =>
   [...places].sort(
     (a, b) =>
@@ -28,6 +30,7 @@ interface AppState {
   setSearchQuery: (query: string) => void;
   loadPlaces: (filters?: PlaceFilterParams) => Promise<void>;
   generateRoute: () => Promise<void>;
+  recalculateRoute: () => Promise<void>;
   setIsRouteGenerated: (value: boolean) => void;
   setPreferences: (prefs: Partial<UserPreferences>) => void;
   addToCart: (place: Place) => void;
@@ -93,37 +96,93 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   generateRoute: async () => {
-    const { cart, preferences } = get();
-    if (cart.length === 0) return;
+    set({ isRouteGenerated: true });
+    await get().recalculateRoute();
+  },
 
+  recalculateRoute: async () => {
+    const { cart, preferences } = get();
+    if (cart.length < 2) {
+      set({
+        routeData: {
+          distance_meters: 0,
+          duration_seconds: 0,
+          stats: { distance_m: 0, total_min: 0, pct_green: 0 },
+          geojson: { type: 'FeatureCollection', features: [] },
+        },
+        isLoading: false,
+      });
+      return;
+    }
+
+    const currentRequestId = ++activeRouteRequestId;
     set({ isLoading: true });
-    const result = await calculateRouteApi(cart, preferences);
-    set({
-      routeData: result,
-      isRouteGenerated: true,
-      isLoading: false,
-    });
+
+    try {
+      const result = await calculateRouteApi(cart, preferences);
+      if (currentRequestId === activeRouteRequestId) {
+        set({
+          routeData: result,
+          isLoading: false,
+          cartWasModified: false,
+        });
+      }
+    } catch (err) {
+      if (currentRequestId === activeRouteRequestId) {
+        console.error('Błąd przeliczania trasy:', err);
+        set({ isLoading: false });
+      }
+    }
   },
 
   setIsRouteGenerated: (value) => set({ isRouteGenerated: value }),
 
-  // Aktualizacja preferencji automatycznie odświeża listę z zachowaniem wyszukiwania
+  // Aktualizacja preferencji automatycznie odświeża listę i przelicza wygenerowaną trasę
   setPreferences: (newPrefs) => {
     set((state) => ({ preferences: { ...state.preferences, ...newPrefs } }));
     get().loadPlaces();
+
+    const state = get();
+    if (
+      (state.isRouteGenerated || Boolean(state.routeData)) &&
+      state.cart.length >= 2 &&
+      (newPrefs.mood !== undefined ||
+        newPrefs.prioritizeWellLit !== undefined ||
+        newPrefs.accessibleOnly !== undefined)
+    ) {
+      get().recalculateRoute();
+    }
   },
 
-  addToCart: (place) =>
-    set((state) => {
-      if (state.cart.some((item) => String(item.id) === String(place.id))) return state;
-      return { cart: [...state.cart, place], cartWasModified: true };
-    }),
+  // Dodanie do koszyka automatycznie przelicza trasę, jeśli widok trasy jest aktywny
+  addToCart: (place) => {
+    const state = get();
+    if (state.cart.some((item) => String(item.id) === String(place.id))) return;
+    const newCart = [...state.cart, place];
+    set({ cart: newCart, cartWasModified: true });
+    if (state.isRouteGenerated || Boolean(state.routeData)) {
+      get().recalculateRoute();
+    }
+  },
 
-  removeFromCart: (placeId) =>
-    set((state) => ({
-      cart: state.cart.filter((item) => String(item.id) !== String(placeId)),
-      cartWasModified: true,
-    })),
+  // Usunięcie punktu automatycznie przelicza trasę
+  removeFromCart: (placeId) => {
+    const state = get();
+    const newCart = state.cart.filter((item) => String(item.id) !== String(placeId));
+    set({ cart: newCart, cartWasModified: true });
+    if (newCart.length < 2) {
+      set({
+        routeData: {
+          distance_meters: 0,
+          duration_seconds: 0,
+          stats: { distance_m: 0, total_min: 0, pct_green: 0 },
+          geojson: { type: 'FeatureCollection', features: [] },
+        },
+      });
+    } else if (state.isRouteGenerated || Boolean(state.routeData)) {
+      get().recalculateRoute();
+    }
+  },
 
   toggleLike: async (placeId) => {
     const key = String(placeId);
@@ -185,15 +244,29 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  moveCartItem: (index, direction) =>
-    set((state) => {
-      const newCart = [...state.cart];
-      const targetIndex = direction === 'up' ? index - 1 : index + 1;
-      if (targetIndex < 0 || targetIndex >= newCart.length) return state;
-      const [moved] = newCart.splice(index, 1);
-      newCart.splice(targetIndex, 0, moved);
-      return { cart: newCart };
-    }),
+  // Zmiana kolejności punktów w trasie natychmiast przelicza nową trasę
+  moveCartItem: (index, direction) => {
+    const state = get();
+    const newCart = [...state.cart];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newCart.length) return;
+    const [moved] = newCart.splice(index, 1);
+    newCart.splice(targetIndex, 0, moved);
+    set({ cart: newCart, cartWasModified: true });
+    if (state.isRouteGenerated || Boolean(state.routeData)) {
+      get().recalculateRoute();
+    }
+  },
 
-  clearCart: () => set({ cart: [], cartWasModified: true }),
+  clearCart: () =>
+    set({
+      cart: [],
+      cartWasModified: true,
+      routeData: {
+        distance_meters: 0,
+        duration_seconds: 0,
+        stats: { distance_m: 0, total_min: 0, pct_green: 0 },
+        geojson: { type: 'FeatureCollection', features: [] },
+      },
+    }),
 }));

@@ -81,12 +81,18 @@ export interface MapRouteData {
 export interface RouteResponse {
   distance_meters: number;
   duration_seconds: number;
+  stats?: {
+    distance_m: number;
+    total_min: number;
+    pct_green: number;
+  };
   geojson:
     | RouteFeatureCollection
     | {
         type: 'LineString';
         coordinates: [number, number][];
       };
+  route?: RouteFeatureCollection;
 }
 
 export const CATEGORY_LABELS_PL: Record<string, string> = {
