@@ -11,3 +11,4 @@ def health():
 
 api_router.include_router(attractions.router, prefix="/attractions", tags=["Attractions"])
 api_router.include_router(routing.router, prefix="/routing", tags=["Routing"])
+api_router.include_router(routing.router, prefix="/route", tags=["Route"])
