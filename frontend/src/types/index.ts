@@ -34,7 +34,8 @@ export interface Place {
 export interface UserPreferences {
   mood: Mood;
   availableTimeMinutes: number;
-  prioritizeWellLit: boolean;
+  prioritizeGreen: boolean;
+  prioritizeWellLit?: boolean;
   accessibleOnly: boolean;
   selectedCategories: Category[];
 }

@@ -227,7 +227,9 @@ export function InteractiveMap({
                         </div>
                         <div>
                           <dt>Bez barier</dt>
-                          <dd>{place.isAccessible ? 'Tak' : 'Nie'}</dd>
+                          <dd className={place.isAccessible ? 'text-blue-600 font-semibold' : ''}>
+                            {place.isAccessible ? 'Tak' : 'Nie'}
+                          </dd>
                         </div>
                       </dl>
                       {onToggleLike && (

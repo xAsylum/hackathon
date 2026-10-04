@@ -35,7 +35,7 @@ export async function fetchPlacesFromApi(
 ): Promise<Place[]> {
   try {
     const query = new URLSearchParams();
-    query.set('limit', String(filters.limit ?? 50));
+    query.set('limit', String(filters.limit ?? 20));
     if (filters.search) query.set('search', filters.search);
     if (filters.accessibleOnly) query.set('accessible_only', 'true');
     filters.categories?.forEach((category) =>
@@ -126,6 +126,7 @@ export async function calculateRouteApi(
         })),
         accessible_only: preferences.accessibleOnly,
         prioritize_lit: preferences.prioritizeWellLit,
+        prioritize_green: preferences.prioritizeGreen,
         mood: preferences.mood,
       }),
     });

@@ -13,7 +13,8 @@ class RouteRequest(BaseModel):
     start_lon: float
     end_lat: float
     end_lon: float
-    weight: float = 0.5  # 0.0 means normal shortest path, >0.0 prefers green
+    weight: Optional[float] = None  # 0.0 means normal shortest path, >0.0 prefers green
+    prioritize_green: bool = True
 
 
 class Waypoint(BaseModel):
@@ -26,6 +27,7 @@ class OptimizeRouteRequest(BaseModel):
     waypoints: List[Waypoint]
     accessible_only: bool = False
     prioritize_lit: bool = False
+    prioritize_green: bool = True
     mood: Optional[str] = "chill"
     weight: Optional[float] = None
 
@@ -172,7 +174,12 @@ def get_green_route(request: Request, payload: RouteRequest):
     if start_node is None or end_node is None:
         raise HTTPException(status_code=400, detail="Could not find nearest graph nodes")
 
-    w = max(0.0, min(0.99, payload.weight))
+    if not payload.prioritize_green:
+        w = 0.0  # Don't take green route into account at all - just shortest path
+    elif payload.weight is not None:
+        w = max(0.0, min(0.99, payload.weight))
+    else:
+        w = 0.5
 
     def green_cost(u, v, data):
         if "length" not in data:
@@ -273,18 +280,11 @@ def optimize_route(request: Request, payload: OptimizeRouteRequest):
     G = getattr(request.app.state, "graph", None)
     grid = get_spatial_grid(request) if G is not None else None
 
-    # Determine green weight preference based on mood
-    if payload.weight is not None:
-        w = max(0.0, min(0.99, payload.weight))
+    # Determine green weight preference based on prioritize_green and mood
+    if not payload.prioritize_green:
+        w = 0.0  # If it does not prioritize green terrains, don't take green route into account at all - just shortest path
     else:
-        mood_weights = {
-            "chill": 0.75,       # Strong preference for greenery and parks
-            "nature": 0.85,      # Maximum preference for parks and nature reserves
-            "culture": 0.45,     # Balanced route between sights
-            "night_vibe": 0.30,   # Moderate greenery, prioritize lighted streets
-            "quick_walk": 0.10,  # Fast direct route
-        }
-        w = mood_weights.get(payload.mood, 0.6)
+        w = 0.85
 
     features: List[RouteSegment] = []
     total_distance_m = 0.0

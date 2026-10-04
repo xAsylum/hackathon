@@ -23,12 +23,15 @@ interface AppState {
   cartWasModified: boolean;
   isRouteGenerated: boolean;
   isLoading: boolean;
+  placesLimit: number;
+  hasMorePlaces: boolean;
   pendingLikeIds: string[];
   routeData: RouteResponse | null;
 
   // Akcje
   setSearchQuery: (query: string) => void;
   loadPlaces: (filters?: PlaceFilterParams) => Promise<void>;
+  increaseLimit: (step?: number) => Promise<void>;
   generateRoute: () => Promise<void>;
   recalculateRoute: () => Promise<void>;
   setIsRouteGenerated: (value: boolean) => void;
@@ -45,7 +48,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   preferences: {
     mood: 'chill',
     availableTimeMinutes: 120,
-    prioritizeWellLit: true,
+    prioritizeGreen: true,
+    prioritizeWellLit: false,
     accessibleOnly: false,
     selectedCategories: ['culture', 'nature'],
   },
@@ -54,6 +58,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   cartWasModified: false,
   isRouteGenerated: false,
   isLoading: false,
+  placesLimit: 20,
+  hasMorePlaces: true,
   pendingLikeIds: [],
   routeData: null,
 
@@ -62,9 +68,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().loadPlaces({ search: query.trim() || undefined });
   },
 
-  // Pobieranie miejsc zawsze łączące aktywne wyszukiwanie z nałożonymi filtrami
+  // Pobieranie miejsc zawsze łączące aktywne wyszukiwanie z nałożonymi filtrami i limitem
   loadPlaces: async (overrideFilters) => {
-    const { preferences, searchQuery } = get();
+    const { preferences, searchQuery, placesLimit } = get();
 
     const effectiveSearch =
       overrideFilters?.search !== undefined
@@ -83,16 +89,33 @@ export const useAppStore = create<AppState>((set, get) => ({
         ? preferences.selectedCategories
         : undefined;
 
+    const effectiveLimit =
+      overrideFilters?.limit !== undefined
+        ? overrideFilters.limit
+        : placesLimit;
+
     const effectiveFilters: PlaceFilterParams = {
       search: effectiveSearch,
       accessibleOnly: effectiveAccessibleOnly,
       categories: effectiveCategories,
+      limit: effectiveLimit,
       ...overrideFilters,
     };
 
     set({ isLoading: true });
     const places = await fetchPlacesFromApi(effectiveFilters);
-    set({ allPlaces: sortByLikes(places), isLoading: false });
+    const sorted = sortByLikes(places);
+    set({
+      allPlaces: sorted,
+      hasMorePlaces: places.length >= (effectiveFilters.limit ?? placesLimit),
+      isLoading: false,
+    });
+  },
+
+  increaseLimit: async (step = 20) => {
+    const nextLimit = get().placesLimit + step;
+    set({ placesLimit: nextLimit });
+    await get().loadPlaces({ limit: nextLimit });
   },
 
   generateRoute: async () => {
@@ -147,6 +170,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       (state.isRouteGenerated || Boolean(state.routeData)) &&
       state.cart.length >= 2 &&
       (newPrefs.mood !== undefined ||
+        newPrefs.prioritizeGreen !== undefined ||
         newPrefs.prioritizeWellLit !== undefined ||
         newPrefs.accessibleOnly !== undefined)
     ) {

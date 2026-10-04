@@ -2,8 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* #region global */
+@font-face {
+    font-family: 'jost';
+    src: url('fonts/jost.ttf');
+}
+
+*{
+    /* font-family: 'jost', serif; */
+}
+
 :root {
-  --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-card: rgba(30, 41, 59, 0.7);
   --bg-input: #0b1120;
@@ -46,35 +55,77 @@ body {
 }
 
 .leaflet-container {
-  background: #0f172a;
+  background: #f8fafc;
   font-family: var(--font-family);
 }
 
-.leaflet-control-layers,
-.leaflet-bar a {
-  border-color: rgba(148, 163, 184, 0.25) !important;
-  background: rgba(15, 23, 42, 0.92) !important;
-  color: #e2e8f0 !important;
-  backdrop-filter: blur(12px);
+.leaflet-bar {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
 }
 
-.leaflet-control-layers {
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+.leaflet-bar a {
+  border: 0 !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  color: #1e293b !important;
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  font-size: 16px !important;
+  font-weight: 600;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.leaflet-bar a:last-child {
+  border-bottom: 0 !important;
+}
+
+.leaflet-bar a:hover {
+  background: #f1f5f9 !important;
+  color: #047857 !important;
+}
+
+.leaflet-control-layers,
+.leaflet-control-layers-expanded {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  color: #1e293b !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12) !important;
+  padding: 8px 12px !important;
 }
 
 .leaflet-control-layers label {
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   font-size: 12px;
+  color: #1e293b !important;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.leaflet-control-layers-overlays label span {
+  color: #1e293b !important;
+}
+
+.leaflet-control-layers-overlays input[type="checkbox"] {
+  accent-color: #047857;
+  cursor: pointer;
 }
 
 .leaflet-control-attribution {
-  background: rgba(15, 23, 42, 0.75) !important;
-  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #64748b !important;
+  border-top-left-radius: 6px;
 }
 
 .leaflet-control-attribution a {
-  color: #6ee7b7;
+  color: #047857 !important;
 }
 
 .poi-marker-wrapper {
@@ -195,23 +246,24 @@ body {
   justify-content: center;
   gap: 6px;
   margin-top: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.25);
+  border: 1px solid #cbd5e1;
   border-radius: 8px;
-  background: rgba(30, 41, 59, 0.9);
-  color: #cbd5e1;
+  background: #ffffff;
+  color: #334155;
   padding: 8px 10px;
   font: inherit;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
 .poi-popup__like:hover,
 .poi-popup__like.is-liked {
-  border-color: rgba(251, 113, 133, 0.45);
-  background: rgba(244, 63, 94, 0.12);
-  color: #fda4af;
+  border-color: #fca5a5;
+  background: #ffffff;
+  color: #e11d48;
 }
 
 .poi-popup__like span {
