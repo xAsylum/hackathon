@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import L from 'leaflet';
-import { Trash2 } from 'lucide-react';
+import { Heart, Trash2 } from 'lucide-react';
 import {
   FeatureGroup,
   GeoJSON,
@@ -11,35 +11,44 @@ import {
   TileLayer,
   useMap,
 } from 'react-leaflet';
-import type { Place, RouteResponse, RouteSegment } from '../types';
+import type { MapRouteData, Place, RouteSegment } from '../types';
 
 interface InteractiveMapProps {
-  data: RouteResponse;
+  data: MapRouteData;
   places: Place[];
   onRemovePlace?: (placeId: string | number) => void;
+  onToggleLike?: (placeId: string | number) => void;
 }
 
 interface FitMapProps {
-  route: RouteResponse['route'];
+  route: MapRouteData['route'];
   places: Place[];
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
   landmarks: '#eab308',
+  history: '#eab308',
+  viewpoint: '#0ea5e9',
   culture: '#8b5cf6',
   nature: '#10b981',
   'food and cuisine': '#f97316',
-  entertainment: '#ec4899',
-  alcohol: '#0ea5e9',
+  food: '#f97316',
+  entertainment: '#0ea5e9',
+  alcohol: '#ec4899',
+  nightlife: '#ec4899',
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  landmarks: 'Zabytki & Widoki',
-  culture: 'Kultura & Sztuka',
-  nature: 'Parki & Zieleń',
-  'food and cuisine': 'Gastronomia',
+  landmarks: 'Zabytek',
+  history: 'Historia',
+  viewpoint: 'Punkt widokowy',
+  culture: 'Kultura',
+  nature: 'Natura',
+  'food and cuisine': 'Jedzenie',
+  food: 'Jedzenie',
   entertainment: 'Rozrywka',
-  alcohol: 'Bary & Puby',
+  alcohol: 'Bar lub pub',
+  nightlife: 'Bar lub pub',
 };
 
 // Bezpieczny odczyt współrzędnych niezależnie od formatu (FastAPI vs Mock)
@@ -53,7 +62,7 @@ function getPlaceCoords(place: Place): L.LatLngTuple | null {
   return null;
 }
 
-function featureCollection(features: RouteSegment[]): RouteResponse['route'] {
+function featureCollection(features: RouteSegment[]): MapRouteData['route'] {
   return { type: 'FeatureCollection', features };
 }
 
@@ -92,7 +101,7 @@ function FitMapToData({ route, places }: FitMapProps) {
 }
 
 function poiIcon(place: Place) {
-  const color = CATEGORY_COLORS[place.category] || '#6366f1';
+  const color = CATEGORY_COLORS[place.category] ?? '#64748b';
 
   return L.divIcon({
     className: 'poi-marker-wrapper',
@@ -103,7 +112,12 @@ function poiIcon(place: Place) {
   });
 }
 
-export function InteractiveMap({ data, places, onRemovePlace }: InteractiveMapProps) {
+export function InteractiveMap({
+  data,
+  places,
+  onRemovePlace,
+  onToggleLike,
+}: InteractiveMapProps) {
   const greenSegments = useMemo(
     () =>
       featureCollection(
@@ -215,6 +229,22 @@ export function InteractiveMap({ data, places, onRemovePlace }: InteractiveMapPr
                           <dd>{place.isAccessible ? 'Tak' : 'Nie'}</dd>
                         </div>
                       </dl>
+                      {onToggleLike && (
+                        <button
+                          type="button"
+                          className={`poi-popup__like ${place.isLiked ? 'is-liked' : ''}`}
+                          onClick={() => onToggleLike(place.id)}
+                          aria-pressed={place.isLiked}
+                        >
+                          <Heart
+                            size={14}
+                            fill={place.isLiked ? 'currentColor' : 'none'}
+                            aria-hidden="true"
+                          />
+                          {place.isLiked ? 'Warto odwiedzić' : 'Poleć atrakcję'}
+                          <span>{place.likesCount}</span>
+                        </button>
+                      )}
                       {onRemovePlace && (
                         <button
                           type="button"

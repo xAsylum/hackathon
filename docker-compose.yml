@@ -8,7 +8,6 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - /app/.venv
       - ./backend/data:/app/data
     environment:
       - DATABASE_URL=sqlite:////app/data/app.db

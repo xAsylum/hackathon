@@ -1,6 +1,17 @@
 import { create } from 'zustand';
 import { Place, UserPreferences, RouteResponse, PlaceFilterParams } from '../types';
-import { fetchPlacesFromApi, calculateRouteApi } from '../api/places';
+import {
+  fetchPlacesFromApi,
+  calculateRouteApi,
+  setAttractionLike,
+} from '../api/places';
+
+const sortByLikes = (places: Place[]): Place[] =>
+  [...places].sort(
+    (a, b) =>
+      b.likesCount - a.likesCount ||
+      a.name.localeCompare(b.name, 'pl'),
+  );
 
 interface AppState {
   allPlaces: Place[];
@@ -10,6 +21,7 @@ interface AppState {
   cartWasModified: boolean;
   isRouteGenerated: boolean;
   isLoading: boolean;
+  pendingLikeIds: string[];
   routeData: RouteResponse | null;
 
   // Akcje
@@ -20,6 +32,7 @@ interface AppState {
   setPreferences: (prefs: Partial<UserPreferences>) => void;
   addToCart: (place: Place) => void;
   removeFromCart: (placeId: string | number) => void;
+  toggleLike: (placeId: string | number) => Promise<void>;
   moveCartItem: (index: number, direction: 'up' | 'down') => void;
   clearCart: () => void;
 }
@@ -38,6 +51,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   cartWasModified: false,
   isRouteGenerated: false,
   isLoading: false,
+  pendingLikeIds: [],
   routeData: null,
 
   setSearchQuery: (query: string) => {
@@ -75,7 +89,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set({ isLoading: true });
     const places = await fetchPlacesFromApi(effectiveFilters);
-    set({ allPlaces: places, isLoading: false });
+    set({ allPlaces: sortByLikes(places), isLoading: false });
   },
 
   generateRoute: async () => {
@@ -110,6 +124,66 @@ export const useAppStore = create<AppState>((set, get) => ({
       cart: state.cart.filter((item) => String(item.id) !== String(placeId)),
       cartWasModified: true,
     })),
+
+  toggleLike: async (placeId) => {
+    const key = String(placeId);
+    const state = get();
+    if (state.pendingLikeIds.includes(key)) return;
+
+    const place = state.allPlaces.find((item) => String(item.id) === key);
+    if (!place) return;
+
+    const previousLiked = place.isLiked;
+    const previousCount = place.likesCount;
+    const nextLiked = !previousLiked;
+    const nextCount = Math.max(0, previousCount + (nextLiked ? 1 : -1));
+    const updatePlace = (
+      item: Place,
+      isLiked: boolean,
+      likesCount: number,
+    ): Place =>
+      String(item.id) === key ? { ...item, isLiked, likesCount } : item;
+
+    set((current) => ({
+      allPlaces: sortByLikes(
+        current.allPlaces.map((item) =>
+          updatePlace(item, nextLiked, nextCount),
+        ),
+      ),
+      cart: current.cart.map((item) =>
+        updatePlace(item, nextLiked, nextCount),
+      ),
+      pendingLikeIds: [...current.pendingLikeIds, key],
+    }));
+
+    try {
+      const result = await setAttractionLike(placeId, nextLiked);
+      set((current) => ({
+        allPlaces: sortByLikes(
+          current.allPlaces.map((item) =>
+            updatePlace(item, result.liked, result.likes_count),
+          ),
+        ),
+        cart: current.cart.map((item) =>
+          updatePlace(item, result.liked, result.likes_count),
+        ),
+        pendingLikeIds: current.pendingLikeIds.filter((id) => id !== key),
+      }));
+    } catch (error) {
+      console.error('Nie udało się zapisać polubienia', error);
+      set((current) => ({
+        allPlaces: sortByLikes(
+          current.allPlaces.map((item) =>
+            updatePlace(item, previousLiked, previousCount),
+          ),
+        ),
+        cart: current.cart.map((item) =>
+          updatePlace(item, previousLiked, previousCount),
+        ),
+        pendingLikeIds: current.pendingLikeIds.filter((id) => id !== key),
+      }));
+    }
+  },
 
   moveCartItem: (index, direction) =>
     set((state) => {

@@ -1,11 +1,13 @@
-from typing import List, Optional, Tuple
-from fastapi import APIRouter, Depends, Query
+from typing import Dict, List, Optional, Set, Tuple
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import func, or_, and_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.models.attraction import Attraction
+from app.models.attraction import Attraction, AttractionLike
 from app.schemas.attraction import (
+    AttractionLikeResponse,
     AttractionNameResponse,
     AttractionResponse,
     PlaceResponse,
@@ -76,7 +78,11 @@ def _parse_list_param(param: Optional[List[str]]) -> List[str]:
     return result
 
 
-def serialize_attraction_to_place(attraction: Attraction) -> PlaceResponse:
+def serialize_attraction_to_place(
+    attraction: Attraction,
+    likes_count: int = 0,
+    liked: bool = False,
+) -> PlaceResponse:
     accessible = is_wheelchair_accessible(attraction.wheelchair)
     clean_cat = to_clean_category(attraction.category, attraction.monument_type)
 
@@ -93,7 +99,45 @@ def serialize_attraction_to_place(attraction: Attraction) -> PlaceResponse:
         monument_subtype=attraction.monument_subtype,
         raw_category=attraction.category,
         wheelchair=attraction.wheelchair,
+        likes_count=likes_count,
+        liked=liked,
     )
+
+
+def get_like_state(
+    db: Session,
+    attraction_ids: List[int],
+    visitor_id: Optional[str],
+) -> Tuple[Dict[int, int], Set[int]]:
+    if not attraction_ids:
+        return {}, set()
+
+    count_rows = (
+        db.query(
+            AttractionLike.attraction_id,
+            func.count(AttractionLike.id),
+        )
+        .filter(AttractionLike.attraction_id.in_(attraction_ids))
+        .group_by(AttractionLike.attraction_id)
+        .all()
+    )
+    counts = {attraction_id: count for attraction_id, count in count_rows}
+
+    liked_ids: Set[int] = set()
+    if visitor_id:
+        liked_ids = {
+            attraction_id
+            for (attraction_id,) in (
+                db.query(AttractionLike.attraction_id)
+                .filter(
+                    AttractionLike.attraction_id.in_(attraction_ids),
+                    AttractionLike.visitor_id == visitor_id,
+                )
+                .all()
+            )
+        }
+
+    return counts, liked_ids
 
 
 @router.get("", response_model=List[PlaceResponse])
@@ -123,6 +167,7 @@ def get_places(
         description="Max number of locations to return",
     ),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
+    visitor_id: Optional[str] = Header(None, alias="X-Visitor-Id"),
     db: Session = Depends(get_db),
 ):
     """
@@ -132,7 +177,18 @@ def get_places(
     - wheelchair accessibility
     - search query
     """
-    query = db.query(Attraction)
+    like_counts = (
+        db.query(
+            AttractionLike.attraction_id.label("attraction_id"),
+            func.count(AttractionLike.id).label("likes_count"),
+        )
+        .group_by(AttractionLike.attraction_id)
+        .subquery()
+    )
+    query = db.query(Attraction).outerjoin(
+        like_counts,
+        Attraction.id == like_counts.c.attraction_id,
+    )
 
     if accessible_only:
         query = query.filter(func.lower(Attraction.wheelchair).in_(["yes", "limited", "designated"]))
@@ -197,14 +253,116 @@ def get_places(
             elif db_cats:
                 query = query.filter(~Attraction.category.in_(db_cats))
 
-    query = query.order_by(Attraction.name)
+    query = query.order_by(
+        func.coalesce(like_counts.c.likes_count, 0).desc(),
+        Attraction.name,
+    )
     if offset:
         query = query.offset(offset)
     if limit:
         query = query.limit(limit)
 
     items = query.all()
-    return [serialize_attraction_to_place(item) for item in items]
+    counts, liked_ids = get_like_state(
+        db,
+        [item.id for item in items],
+        visitor_id,
+    )
+    return [
+        serialize_attraction_to_place(
+            item,
+            likes_count=counts.get(item.id, 0),
+            liked=item.id in liked_ids,
+        )
+        for item in items
+    ]
+
+
+@router.put("/{attraction_id}/like", response_model=AttractionLikeResponse)
+def like_attraction(
+    attraction_id: int,
+    visitor_id: str = Header(
+        ...,
+        alias="X-Visitor-Id",
+        min_length=1,
+        max_length=64,
+    ),
+    db: Session = Depends(get_db),
+):
+    attraction = db.query(Attraction.id).filter(Attraction.id == attraction_id).first()
+    if attraction is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Attraction not found",
+        )
+
+    existing_like = (
+        db.query(AttractionLike.id)
+        .filter(
+            AttractionLike.attraction_id == attraction_id,
+            AttractionLike.visitor_id == visitor_id,
+        )
+        .first()
+    )
+    if existing_like is None:
+        db.add(
+            AttractionLike(
+                attraction_id=attraction_id,
+                visitor_id=visitor_id,
+            )
+        )
+        try:
+            db.commit()
+        except IntegrityError:
+            # Idempotent response when two tabs like at the same time.
+            db.rollback()
+
+    likes_count = (
+        db.query(func.count(AttractionLike.id))
+        .filter(AttractionLike.attraction_id == attraction_id)
+        .scalar()
+    )
+    return AttractionLikeResponse(
+        attraction_id=attraction_id,
+        likes_count=likes_count or 0,
+        liked=True,
+    )
+
+
+@router.delete("/{attraction_id}/like", response_model=AttractionLikeResponse)
+def unlike_attraction(
+    attraction_id: int,
+    visitor_id: str = Header(
+        ...,
+        alias="X-Visitor-Id",
+        min_length=1,
+        max_length=64,
+    ),
+    db: Session = Depends(get_db),
+):
+    attraction = db.query(Attraction.id).filter(Attraction.id == attraction_id).first()
+    if attraction is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Attraction not found",
+        )
+
+    db.query(AttractionLike).filter(
+        AttractionLike.attraction_id == attraction_id,
+        AttractionLike.visitor_id == visitor_id,
+    ).delete(synchronize_session=False)
+    db.commit()
+
+    likes_count = (
+        db.query(func.count(AttractionLike.id))
+        .filter(AttractionLike.attraction_id == attraction_id)
+        .scalar()
+    )
+    return AttractionLikeResponse(
+        attraction_id=attraction_id,
+        likes_count=likes_count or 0,
+        liked=False,
+    )
 
 
 @router.get("/random", response_model=List[AttractionResponse])

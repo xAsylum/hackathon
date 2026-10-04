@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Check, Clock, Accessibility } from 'lucide-react';
+import { Plus, Check, Clock, Accessibility, Heart } from 'lucide-react';
 import { Place } from '../types';
 import { useAppStore } from '../store/useAppStore';
 
@@ -8,8 +8,15 @@ interface PlaceCardProps {
 }
 
 export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
-  const { cart, addToCart, removeFromCart } = useAppStore();
+  const {
+    cart,
+    addToCart,
+    removeFromCart,
+    toggleLike,
+    pendingLikeIds,
+  } = useAppStore();
   const isInCart = cart.some((item) => String(item.id) === String(place.id));
+  const isLikePending = pendingLikeIds.includes(String(place.id));
 
   // Przyjazny tag: "castle", "restaurant / vegan" itp.
   const displayTag = place.monument_subtype
@@ -48,28 +55,48 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
             </span>
           )}
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={isLikePending}
+            onClick={() => toggleLike(place.id)}
+            aria-label={place.isLiked ? 'Usuń polubienie' : 'Polub atrakcję'}
+            aria-pressed={place.isLiked}
+            title={place.isLiked ? 'Usuń polubienie' : 'Warto odwiedzić'}
+            className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all disabled:cursor-wait disabled:opacity-60 ${
+              place.isLiked
+                ? 'border-rose-500/40 bg-rose-500/15 text-rose-300'
+                : 'border-slate-700 bg-slate-800/70 text-slate-400 hover:border-rose-500/40 hover:text-rose-300'
+            }`}
+          >
+            <Heart
+              className={`h-3.5 w-3.5 ${place.isLiked ? 'fill-current' : ''}`}
+            />
+            <span>{place.likesCount}</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => (isInCart ? removeFromCart(place.id) : addToCart(place))}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+          <button
+            type="button"
+            onClick={() => (isInCart ? removeFromCart(place.id) : addToCart(place))}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${            
             isInCart
               ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
               : 'bg-emerald-800 hover:bg-emerald-500 text-neutral-200 shadow-sm'
-          }`}
-        >
-          {isInCart ? (
-            <>
-              <Check className="w-3 h-3" />
-              <span>W trasie</span>
-            </>
-          ) : (
-            <>
-              <Plus className="w-3 h-3" />
-              <span>Dodaj</span>
-            </>
-          )}
-        </button>
+              }`}
+          >
+            {isInCart ? (
+              <>
+                <Check className="w-3 h-3" />
+                <span>W trasie</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-3 h-3" />
+                <span>Dodaj</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
   );

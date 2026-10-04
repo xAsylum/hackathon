@@ -1,10 +1,11 @@
 export type Category =
-  | 'landmarks'
+  | 'history'
+  | 'viewpoint'
   | 'culture'
   | 'nature'
-  | 'food and cuisine'
+  | 'food'
   | 'entertainment'
-  | 'alcohol';
+  | 'nightlife';
 
 export type Mood = 'chill' | 'culture' | 'night_vibe' | 'quick_walk';
 
@@ -12,19 +13,21 @@ export interface Place {
   id: string | number;
   name: string;
   category: Category;
-  description?: string;
-  durationMinutes?: number;
   latitude: number;
   longitude: number;
+  isAccessible: boolean;
+  description?: string;
+  durationMinutes?: number;
   coordinates?: {
     lat: number;
     lng: number;
   };
   isWellLit?: boolean;
-  isAccessible?: boolean;
   wheelchair?: string;
   monument_type?: string;
   monument_subtype?: string;
+  likesCount: number;
+  isLiked: boolean;
   imageUrl?: string;
 }
 
@@ -34,6 +37,15 @@ export interface UserPreferences {
   prioritizeWellLit: boolean;
   accessibleOnly: boolean;
   selectedCategories: Category[];
+}
+
+export interface PlaceFilterParams {
+  search?: string;
+  accessibleOnly?: boolean;
+  categories?: Category[];
+  excludeCategories?: Category[];
+  limit?: number;
+  offset?: number;
 }
 
 export interface RouteSegmentProperties {
@@ -52,26 +64,39 @@ export interface RouteSegment {
   properties: RouteSegmentProperties;
 }
 
-export interface RouteResponse {
+export interface RouteFeatureCollection {
+  type: 'FeatureCollection';
+  features: RouteSegment[];
+}
+
+export interface MapRouteData {
   stats: {
     distance_m: number;
     total_min: number;
     pct_green: number;
   };
-  route: {
-    type: 'FeatureCollection';
-    features: RouteSegment[];
-  };
-  geojson?: any;
+  route: RouteFeatureCollection;
+}
+
+export interface RouteResponse {
+  distance_meters: number;
+  duration_seconds: number;
+  geojson:
+    | RouteFeatureCollection
+    | {
+        type: 'LineString';
+        coordinates: [number, number][];
+      };
 }
 
 export const CATEGORY_LABELS_PL: Record<string, string> = {
-  landmarks: 'Zabytki & Widoki',
+  history: 'Zabytki',
+  viewpoint: 'Widoki',
   culture: 'Kultura & Sztuka',
   nature: 'Parki & Zieleń',
-  'food and cuisine': 'Gastronomia',
+  food: 'Gastronomia',
   entertainment: 'Rozrywka',
-  alcohol: 'Bary & Puby',
+  nightlife: 'Bary & Puby',
 };
 
 export function getCategoryLabelPL(category?: string): string {

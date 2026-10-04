@@ -22,7 +22,9 @@ export default function App() {
     generateRoute,
     isLoading,
     loadPlaces,
-    routeData
+    routeData,
+    removeFromCart,
+    toggleLike,
   } = useAppStore();
 
   const [activeTab, setActiveTab] = useState<'cart' | 'filters'>('cart');
@@ -170,18 +172,13 @@ export default function App() {
           )}
         </div>
       </aside>
-
-      {/* PRAWY OBSZAR: Tu podpina się osoba od Mapy */}
-      <main className="flex-1 h-full relative bg-taupe-900 flex items-center justify-center">
-        <div id="map-container" className="absolute inset-0 flex items-center justify-center text-taupe-500">
-          <div className="text-center space-y-3">
-            <MapIcon className="w-14 h-14 mx-auto stroke-1 animate-pulse text-emerald-500/50" />
-            <p className="text-base font-semibold text-taupe-300">Widok Mapy Gotowy do Spięcia</p>
-            <p className="text-xs text-taupe-500 max-w-xs mx-auto">
-              Osoba od mapy importuje <code>useAppStore</code>, czyta <code>cart</code> oraz <code>routeData.geojson</code> i rysuje trasę.
-            </p>
-          </div>
-        </div>
+      <main className="relative min-h-0 flex-1 bg-slate-900">
+        <InteractiveMap
+          data={mapRouteData}
+          places={cart}
+          onRemovePlace={removeFromCart}
+          onToggleLike={toggleLike}
+        />
       </main>
     </div>
   );
