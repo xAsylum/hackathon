@@ -61,7 +61,7 @@ export const ItineraryCart: React.FC = () => {
         {isOverTimeLimit && (
           <div className="flex items-center gap-1.5 text-[11px] text-rose-400 mt-2 font-medium">
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Trasa przekracza Twój zadeklarowany budżet czasowy.</span>
+            <span>Trasa przekracza Twój zadeklarowany limit czasowy.</span>
           </div>
         )}
       </div>

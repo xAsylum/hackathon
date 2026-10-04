@@ -3,6 +3,23 @@ const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost
 
 export interface HealthResponse {
   status: string;
+  database?: string;
+}
+
+export interface Item {
+  id: number;
+  title: string;
+  description?: string;
+  category?: string;
+  is_active?: boolean;
+  created_at?: string;
+}
+
+export interface ItemCreateInput {
+  title: string;
+  description?: string;
+  category?: string;
+  is_active?: boolean;
 }
 
 export interface BackendAttraction {

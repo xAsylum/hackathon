@@ -10,6 +10,7 @@ import {
   Moon,
   PartyPopper,
   Wine,
+  Eye,
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { Mood, Category } from '../types';
@@ -36,7 +37,7 @@ const MOODS: MoodConfig[] = [
     id: 'culture',
     label: 'Kultura & Historia',
     icon: Landmark,
-    categories: ['landmarks', 'culture'],
+    categories: ['history', 'culture'],
     defaultTime: 120,
     prioritizeWellLit: false,
   },
@@ -44,7 +45,7 @@ const MOODS: MoodConfig[] = [
     id: 'night_vibe',
     label: 'Nocne Klimaty',
     icon: Moon,
-    categories: ['alcohol', 'entertainment', 'food and cuisine'],
+    categories: ['nightlife', 'entertainment', 'food'],
     defaultTime: 120,
     prioritizeWellLit: true,
   },
@@ -52,18 +53,19 @@ const MOODS: MoodConfig[] = [
     id: 'quick_walk',
     label: 'Szybki Spacer',
     icon: Sparkles,
-    categories: ['landmarks', 'nature'],
+    categories: ['history', 'nature'],
     defaultTime: 45,
     prioritizeWellLit: false,
   },
 ];
 
 const CATEGORIES: { id: Category; label: string; icon: React.ElementType }[] = [
-  { id: 'landmarks', label: 'Zabytki & Widoki', icon: Landmark },
+  { id: 'history', label: 'Zabytki', icon: Landmark },
+  { id: 'viewpoint', label: 'Widoki', icon: Eye },
   { id: 'culture', label: 'Kultura & Sztuka', icon: Sparkles },
   { id: 'nature', label: 'Parki & Zieleń', icon: Trees },
-  { id: 'food and cuisine', label: 'Gastronomia', icon: Utensils },
-  { id: 'alcohol', label: 'Bary & Puby', icon: Wine },
+  { id: 'food', label: 'Gastronomia', icon: Utensils },
+  { id: 'nightlife', label: 'Bary & Puby', icon: Wine },
   { id: 'entertainment', label: 'Rozrywka', icon: PartyPopper },
 ];
 
