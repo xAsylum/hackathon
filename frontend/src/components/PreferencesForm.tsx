@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   Sparkles,
   Clock,
@@ -8,16 +9,53 @@ import {
   Trees,
   Moon,
   PartyPopper,
-  Wine
+  Wine,
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { Mood, Category } from '../types';
 
-const MOODS: { id: Mood; label: string; icon: React.ElementType }[] = [
-  { id: 'chill', label: 'Spokój & Parki', icon: Trees },
-  { id: 'culture', label: 'Kultura & Historia', icon: Landmark },
-  { id: 'night_vibe', label: 'Nocne Klimaty', icon: Moon },
-  { id: 'quick_walk', label: 'Szybki Spacer', icon: Sparkles },
+interface MoodConfig {
+  id: Mood;
+  label: string;
+  icon: React.ElementType;
+  categories: Category[];
+  defaultTime: number;
+  prioritizeWellLit: boolean;
+}
+
+const MOODS: MoodConfig[] = [
+  {
+    id: 'chill',
+    label: 'Spokój & Parki',
+    icon: Trees,
+    categories: ['nature', 'culture'],
+    defaultTime: 90,
+    prioritizeWellLit: false,
+  },
+  {
+    id: 'culture',
+    label: 'Kultura & Historia',
+    icon: Landmark,
+    categories: ['landmarks', 'culture'],
+    defaultTime: 120,
+    prioritizeWellLit: false,
+  },
+  {
+    id: 'night_vibe',
+    label: 'Nocne Klimaty',
+    icon: Moon,
+    categories: ['alcohol', 'entertainment', 'food and cuisine'],
+    defaultTime: 120,
+    prioritizeWellLit: true,
+  },
+  {
+    id: 'quick_walk',
+    label: 'Szybki Spacer',
+    icon: Sparkles,
+    categories: ['landmarks', 'nature'],
+    defaultTime: 45,
+    prioritizeWellLit: false,
+  },
 ];
 
 const CATEGORIES: { id: Category; label: string; icon: React.ElementType }[] = [
@@ -31,6 +69,15 @@ const CATEGORIES: { id: Category; label: string; icon: React.ElementType }[] = [
 
 export const PreferencesForm: React.FC = () => {
   const { preferences, setPreferences } = useAppStore();
+
+  const handleMoodSelect = (moodConfig: MoodConfig) => {
+    setPreferences({
+      mood: moodConfig.id,
+      selectedCategories: moodConfig.categories,
+      availableTimeMinutes: moodConfig.defaultTime,
+      prioritizeWellLit: moodConfig.prioritizeWellLit,
+    });
+  };
 
   const toggleCategory = (cat: Category) => {
     const exists = preferences.selectedCategories.includes(cat);
@@ -48,16 +95,17 @@ export const PreferencesForm: React.FC = () => {
           Nastrój wycieczki
         </label>
         <div className="grid grid-cols-2 gap-2">
-          {MOODS.map(({ id, label, icon: Icon }) => {
+          {MOODS.map((moodConfig) => {
+            const { id, label, icon: Icon } = moodConfig;
             const active = preferences.mood === id;
             return (
               <button
                 key={id}
                 type="button"
-                onClick={() => setPreferences({ mood: id })}
+                onClick={() => handleMoodSelect(moodConfig)}
                 className={`flex items-center gap-2 p-2 rounded-lg border text-left transition-all ${
                   active
-                    ? 'bg-emerald-500/10 border-emerald-500 text-emerald-300 font-medium'
+                    ? 'bg-emerald-500/10 border-emerald-500 text-emerald-300 font-medium shadow-sm'
                     : 'bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-800'
                 }`}
               >
@@ -77,22 +125,22 @@ export const PreferencesForm: React.FC = () => {
             Dostępny czas
           </label>
           <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-            {preferences.availableTimeMinutes} min ({Math.round(preferences.availableTimeMinutes / 60 * 10) / 10}h)
+            {preferences.availableTimeMinutes} min ({Math.round((preferences.availableTimeMinutes / 60) * 10) / 10}h)
           </span>
         </div>
         <input
           type="range"
           min="30"
           max="360"
-          step="30"
+          step="15"
           value={preferences.availableTimeMinutes}
           onChange={(e) => setPreferences({ availableTimeMinutes: Number(e.target.value) })}
           className="w-full accent-emerald-500 bg-slate-800 rounded-lg cursor-pointer h-1.5"
         />
         <div className="flex justify-between text-[10px] text-slate-500 mt-1">
           <span>30m</span>
-          <span>2h</span>
-          <span>4h</span>
+          <span>1.5h</span>
+          <span>3h</span>
           <span>6h</span>
         </div>
       </div>
