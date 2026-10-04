@@ -2,11 +2,14 @@ from datetime import datetime
 from sqlalchemy import (
     JSON,
     Column,
+    DateTime,
     Float,
+    ForeignKey,
     Index,
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from app.db.session import Base
 
@@ -32,3 +35,26 @@ class Attraction(Base):
     monument_subtype = Column(String(100), nullable=True)
 
     wheelchair = Column(String(20), nullable=True, index=True)
+
+
+class AttractionLike(Base):
+    """One anonymous browser vote for an attraction."""
+
+    __tablename__ = "attraction_likes"
+    __table_args__ = (
+        UniqueConstraint(
+            "attraction_id",
+            "visitor_id",
+            name="uq_attraction_like_visitor",
+        ),
+        Index("ix_attraction_likes_attraction_id", "attraction_id"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True, nullable=False)
+    attraction_id = Column(
+        Integer,
+        ForeignKey("attractions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    visitor_id = Column(String(64), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)

@@ -58,6 +58,7 @@ export default function App() {
     loadPlaces,
     routeData,
     removeFromCart,
+    toggleLike,
   } = useAppStore();
   const mapRouteData = asMapRouteData(routeData);
 
@@ -230,6 +231,7 @@ export default function App() {
           data={mapRouteData}
           places={cart}
           onRemovePlace={removeFromCart}
+          onToggleLike={toggleLike}
         />
       </main>
     </div>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import L from 'leaflet';
-import { Trash2 } from 'lucide-react';
+import { Heart, Trash2 } from 'lucide-react';
 import {
   FeatureGroup,
   GeoJSON,
@@ -17,6 +17,7 @@ interface InteractiveMapProps {
   data: MapRouteData;
   places: Place[];
   onRemovePlace?: (placeId: string | number) => void;
+  onToggleLike?: (placeId: string | number) => void;
 }
 
 interface FitMapProps {
@@ -24,20 +25,30 @@ interface FitMapProps {
   places: Place[];
 }
 
-const CATEGORY_COLORS: Record<Place['category'], string> = {
-  culture: '#8b5cf6',
-  nature: '#10b981',
-  food: '#f97316',
+const CATEGORY_COLORS: Record<string, string> = {
+  landmarks: '#eab308',
   history: '#eab308',
   viewpoint: '#0ea5e9',
+  culture: '#8b5cf6',
+  nature: '#10b981',
+  'food and cuisine': '#f97316',
+  food: '#f97316',
+  entertainment: '#0ea5e9',
+  alcohol: '#ec4899',
+  nightlife: '#ec4899',
 };
 
-const CATEGORY_LABELS: Record<Place['category'], string> = {
-  culture: 'Kultura',
-  nature: 'Natura',
-  food: 'Jedzenie',
+const CATEGORY_LABELS: Record<string, string> = {
+  landmarks: 'Zabytek',
   history: 'Historia',
   viewpoint: 'Punkt widokowy',
+  culture: 'Kultura',
+  nature: 'Natura',
+  'food and cuisine': 'Jedzenie',
+  food: 'Jedzenie',
+  entertainment: 'Rozrywka',
+  alcohol: 'Bar lub pub',
+  nightlife: 'Bar lub pub',
 };
 
 function featureCollection(features: RouteSegment[]): MapRouteData['route'] {
@@ -67,7 +78,7 @@ function FitMapToData({ route, places }: FitMapProps) {
 }
 
 function poiIcon(place: Place) {
-  const color = CATEGORY_COLORS[place.category];
+  const color = CATEGORY_COLORS[place.category] ?? '#64748b';
 
   return L.divIcon({
     className: 'poi-marker-wrapper',
@@ -78,7 +89,12 @@ function poiIcon(place: Place) {
   });
 }
 
-export function InteractiveMap({ data, places, onRemovePlace }: InteractiveMapProps) {
+export function InteractiveMap({
+  data,
+  places,
+  onRemovePlace,
+  onToggleLike,
+}: InteractiveMapProps) {
   const greenSegments = useMemo(
     () => featureCollection(data.route.features.filter((feature) => feature.properties.green >= 0.5)),
     [data.route.features],
@@ -151,7 +167,9 @@ export function InteractiveMap({ data, places, onRemovePlace }: InteractiveMapPr
               >
                 <Popup>
                   <article className="poi-popup">
-                    <span className="poi-popup__category">{CATEGORY_LABELS[place.category]}</span>
+                    <span className="poi-popup__category">
+                      {CATEGORY_LABELS[place.category] ?? place.category}
+                    </span>
                     <h3>{place.name}</h3>
                     <p>{place.description}</p>
                     <dl>
@@ -168,6 +186,22 @@ export function InteractiveMap({ data, places, onRemovePlace }: InteractiveMapPr
                         <dd>{place.isAccessible ? 'Tak' : 'Nie'}</dd>
                       </div>
                     </dl>
+                    {onToggleLike && (
+                      <button
+                        type="button"
+                        className={`poi-popup__like ${place.isLiked ? 'is-liked' : ''}`}
+                        onClick={() => onToggleLike(place.id)}
+                        aria-pressed={place.isLiked}
+                      >
+                        <Heart
+                          size={14}
+                          fill={place.isLiked ? 'currentColor' : 'none'}
+                          aria-hidden="true"
+                        />
+                        {place.isLiked ? 'Warto odwiedzić' : 'Poleć atrakcję'}
+                        <span>{place.likesCount}</span>
+                      </button>
+                    )}
                     {onRemovePlace && (
                       <button
                         type="button"

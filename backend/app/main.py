@@ -1,4 +1,5 @@
 from app.scripts.seed_attractions import seed_on_startup
+from app.scripts.seed_featured_likes import seed_featured_likes
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -18,6 +19,7 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     if settings.SEED_ATTRACTIONS_ON_STARTUP:
         seed_on_startup()
+    seed_featured_likes()
     yield
 
 

@@ -1,10 +1,11 @@
 export type Category =
-  | 'landmarks'
+  | 'history'
+  | 'viewpoint'
   | 'culture'
   | 'nature'
-  | 'food and cuisine'
+  | 'food'
   | 'entertainment'
-  | 'alcohol';
+  | 'nightlife';
 
 export type Mood = 'chill' | 'culture' | 'night_vibe' | 'quick_walk';
 
@@ -15,11 +16,14 @@ export interface Place {
   latitude: number;
   longitude: number;
   isAccessible: boolean;
+  isWellLit?: boolean;
   wheelchair?: string;
   description?: string;
   durationMinutes?: number;
   monument_type?: string;
   monument_subtype?: string;
+  likesCount: number;
+  isLiked: boolean;
 }
 
 export interface UserPreferences {
@@ -28,6 +32,15 @@ export interface UserPreferences {
   prioritizeWellLit: boolean;
   accessibleOnly: boolean;
   selectedCategories: Category[];
+}
+
+export interface PlaceFilterParams {
+  search?: string;
+  accessibleOnly?: boolean;
+  categories?: Category[];
+  excludeCategories?: Category[];
+  limit?: number;
+  offset?: number;
 }
 
 export interface RouteSegmentProperties {
@@ -72,12 +85,13 @@ export interface RouteResponse {
 }
 
 export const CATEGORY_LABELS_PL: Record<string, string> = {
-  landmarks: 'Zabytki & Widoki',
+  history: 'Zabytki',
+  viewpoint: 'Widoki',
   culture: 'Kultura & Sztuka',
   nature: 'Parki & Zieleń',
-  'food and cuisine': 'Gastronomia',
+  food: 'Gastronomia',
   entertainment: 'Rozrywka',
-  alcohol: 'Bary & Puby',
+  nightlife: 'Bary & Puby',
 };
 
 export function getCategoryLabelPL(category?: string): string {

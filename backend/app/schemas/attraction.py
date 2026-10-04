@@ -40,5 +40,13 @@ class PlaceResponse(BaseModel):
     monument_subtype: Optional[str] = None
     raw_category: Optional[str] = None
     wheelchair: Optional[str] = None
+    likes_count: int = 0
+    liked: bool = False
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+
+class AttractionLikeResponse(BaseModel):
+    attraction_id: int
+    likes_count: int
+    liked: bool

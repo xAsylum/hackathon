@@ -8,7 +8,8 @@ import {
   Trees,
   Moon,
   PartyPopper,
-  Wine
+  Wine,
+  Eye,
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore';
 import { Mood, Category } from '../types';
@@ -21,11 +22,12 @@ const MOODS: { id: Mood; label: string; icon: React.ElementType }[] = [
 ];
 
 const CATEGORIES: { id: Category; label: string; icon: React.ElementType }[] = [
-  { id: 'landmarks', label: 'Zabytki & Widoki', icon: Landmark },
+  { id: 'history', label: 'Zabytki', icon: Landmark },
+  { id: 'viewpoint', label: 'Widoki', icon: Eye },
   { id: 'culture', label: 'Kultura & Sztuka', icon: Sparkles },
   { id: 'nature', label: 'Parki & Zieleń', icon: Trees },
-  { id: 'food and cuisine', label: 'Gastronomia', icon: Utensils },
-  { id: 'alcohol', label: 'Bary & Puby', icon: Wine },
+  { id: 'food', label: 'Gastronomia', icon: Utensils },
+  { id: 'nightlife', label: 'Bary & Puby', icon: Wine },
   { id: 'entertainment', label: 'Rozrywka', icon: PartyPopper },
 ];
 
