@@ -51,6 +51,17 @@ const CATEGORY_LABELS: Record<string, string> = {
   nightlife: 'Bar lub pub',
 };
 
+// Bezpieczny odczyt współrzędnych niezależnie od formatu (FastAPI vs Mock)
+function getPlaceCoords(place: Place): L.LatLngTuple | null {
+  const lat = place.latitude ?? place.coordinates?.lat;
+  const lng = place.longitude ?? place.coordinates?.lng;
+
+  if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng)) {
+    return [lat, lng];
+  }
+  return null;
+}
+
 function featureCollection(features: RouteSegment[]): MapRouteData['route'] {
   return { type: 'FeatureCollection', features };
 }
@@ -59,12 +70,24 @@ function FitMapToData({ route, places }: FitMapProps) {
   const map = useMap();
 
   useEffect(() => {
-    const points: L.LatLngExpression[] = [
-      ...route.features.flatMap((feature) =>
-        feature.geometry.coordinates.map(([lng, lat]) => [lat, lng] as L.LatLngTuple),
-      ),
-      ...places.map(({ latitude, longitude }) => [latitude, longitude] as L.LatLngTuple),
-    ];
+    const points: L.LatLngExpression[] = [];
+
+    // Pobieranie współrzędnych ze ścieżki GeoJSON
+    route?.features?.forEach((feature) => {
+      feature.geometry?.coordinates?.forEach(([lng, lat]) => {
+        if (typeof lat === 'number' && typeof lng === 'number' && !Number.isNaN(lat) && !Number.isNaN(lng)) {
+          points.push([lat, lng]);
+        }
+      });
+    });
+
+    // Pobieranie współrzędnych z punktów POI
+    places.forEach((place) => {
+      const coords = getPlaceCoords(place);
+      if (coords) {
+        points.push(coords);
+      }
+    });
 
     if (points.length > 0) {
       map.fitBounds(L.latLngBounds(points), {
@@ -96,12 +119,25 @@ export function InteractiveMap({
   onToggleLike,
 }: InteractiveMapProps) {
   const greenSegments = useMemo(
-    () => featureCollection(data.route.features.filter((feature) => feature.properties.green >= 0.5)),
-    [data.route.features],
+    () =>
+      featureCollection(
+        data?.route?.features?.filter((feature) => (feature.properties?.green ?? 0) >= 0.5) ?? [],
+      ),
+    [data?.route?.features],
   );
+
   const litSegments = useMemo(
-    () => featureCollection(data.route.features.filter((feature) => feature.properties.lit)),
-    [data.route.features],
+    () =>
+      featureCollection(
+        data?.route?.features?.filter((feature) => Boolean(feature.properties?.lit)) ?? [],
+      ),
+    [data?.route?.features],
+  );
+
+  // Wymuszenie odświeżenia warstwy GeoJSON w Leaflet po przeliczeniu trasy
+  const routeKey = useMemo(
+    () => `${data?.route?.features?.length ?? 0}-${JSON.stringify(data?.stats ?? {})}`,
+    [data],
   );
 
   return (
@@ -120,6 +156,7 @@ export function InteractiveMap({
       <LayersControl position="topright" collapsed={false}>
         <LayersControl.Overlay checked name="Przebieg trasy">
           <GeoJSON
+            key={`route-${routeKey}`}
             data={data.route}
             style={{
               color: '#334155',
@@ -133,6 +170,7 @@ export function InteractiveMap({
 
         <LayersControl.Overlay checked name="Tereny zielone">
           <GeoJSON
+            key={`green-${routeKey}`}
             data={greenSegments}
             style={{
               color: '#10b981',
@@ -146,6 +184,7 @@ export function InteractiveMap({
 
         <LayersControl.Overlay name="Oświetlenie nocne">
           <GeoJSON
+            key={`lit-${routeKey}`}
             data={litSegments}
             style={{
               color: '#fbbf24',
@@ -159,63 +198,68 @@ export function InteractiveMap({
 
         <LayersControl.Overlay checked name="Punkty POI">
           <FeatureGroup>
-            {places.map((place) => (
-              <Marker
-                key={place.id}
-                position={[place.latitude, place.longitude]}
-                icon={poiIcon(place)}
-              >
-                <Popup>
-                  <article className="poi-popup">
-                    <span className="poi-popup__category">
-                      {CATEGORY_LABELS[place.category] ?? place.category}
-                    </span>
-                    <h3>{place.name}</h3>
-                    <p>{place.description}</p>
-                    <dl>
-                      <div>
-                        <dt>Czas</dt>
-                        <dd>{place.durationMinutes ?? 30} min</dd>
-                      </div>
-                      <div>
-                        <dt>Oświetlenie</dt>
-                        <dd>{place.isWellLit == null ? 'Brak danych' : place.isWellLit ? 'Tak' : 'Nie'}</dd>
-                      </div>
-                      <div>
-                        <dt>Bez barier</dt>
-                        <dd>{place.isAccessible ? 'Tak' : 'Nie'}</dd>
-                      </div>
-                    </dl>
-                    {onToggleLike && (
-                      <button
-                        type="button"
-                        className={`poi-popup__like ${place.isLiked ? 'is-liked' : ''}`}
-                        onClick={() => onToggleLike(place.id)}
-                        aria-pressed={place.isLiked}
-                      >
-                        <Heart
-                          size={14}
-                          fill={place.isLiked ? 'currentColor' : 'none'}
-                          aria-hidden="true"
-                        />
-                        {place.isLiked ? 'Warto odwiedzić' : 'Poleć atrakcję'}
-                        <span>{place.likesCount}</span>
-                      </button>
-                    )}
-                    {onRemovePlace && (
-                      <button
-                        type="button"
-                        className="poi-popup__remove"
-                        onClick={() => onRemovePlace(place.id)}
-                      >
-                        <Trash2 size={14} aria-hidden="true" />
-                        Usuń z trasy
-                      </button>
-                    )}
-                  </article>
-                </Popup>
-              </Marker>
-            ))}
+            {places.map((place) => {
+              const coords = getPlaceCoords(place);
+              if (!coords) return null;
+
+              return (
+                <Marker
+                  key={place.id}
+                  position={coords}
+                  icon={poiIcon(place)}
+                >
+                  <Popup>
+                    <article className="poi-popup">
+                      <span className="poi-popup__category">
+                        {CATEGORY_LABELS[place.category] || place.category}
+                      </span>
+                      <h3>{place.name}</h3>
+                      {place.description && <p>{place.description}</p>}
+                      <dl>
+                        <div>
+                          <dt>Czas</dt>
+                          <dd>{place.durationMinutes ?? 30} min</dd>
+                        </div>
+                        <div>
+                          <dt>Oświetlenie</dt>
+                          <dd>{place.isWellLit == null ? 'Brak danych' : place.isWellLit ? 'Tak' : 'Nie'}</dd>
+                        </div>
+                        <div>
+                          <dt>Bez barier</dt>
+                          <dd>{place.isAccessible ? 'Tak' : 'Nie'}</dd>
+                        </div>
+                      </dl>
+                      {onToggleLike && (
+                        <button
+                          type="button"
+                          className={`poi-popup__like ${place.isLiked ? 'is-liked' : ''}`}
+                          onClick={() => onToggleLike(place.id)}
+                          aria-pressed={place.isLiked}
+                        >
+                          <Heart
+                            size={14}
+                            fill={place.isLiked ? 'currentColor' : 'none'}
+                            aria-hidden="true"
+                          />
+                          {place.isLiked ? 'Warto odwiedzić' : 'Poleć atrakcję'}
+                          <span>{place.likesCount}</span>
+                        </button>
+                      )}
+                      {onRemovePlace && (
+                        <button
+                          type="button"
+                          className="poi-popup__remove"
+                          onClick={() => onRemovePlace(place.id)}
+                        >
+                          <Trash2 size={14} aria-hidden="true" />
+                          Usuń z trasy
+                        </button>
+                      )}
+                    </article>
+                  </Popup>
+                </Marker>
+              );
+            })}
           </FeatureGroup>
         </LayersControl.Overlay>
       </LayersControl>

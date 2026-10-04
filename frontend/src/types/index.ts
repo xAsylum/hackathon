@@ -16,14 +16,19 @@ export interface Place {
   latitude: number;
   longitude: number;
   isAccessible: boolean;
-  isWellLit?: boolean;
-  wheelchair?: string;
   description?: string;
   durationMinutes?: number;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  isWellLit?: boolean;
+  wheelchair?: string;
   monument_type?: string;
   monument_subtype?: string;
   likesCount: number;
   isLiked: boolean;
+  imageUrl?: string;
 }
 
 export interface UserPreferences {
@@ -44,10 +49,10 @@ export interface PlaceFilterParams {
 }
 
 export interface RouteSegmentProperties {
-  green: number;
-  traffic: number;
-  lit: boolean;
-  highway: string;
+  green?: number;
+  traffic?: number;
+  lit?: boolean;
+  highway?: string;
 }
 
 export interface RouteSegment {

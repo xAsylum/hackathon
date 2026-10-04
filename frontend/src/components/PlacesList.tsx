@@ -91,34 +91,31 @@ export const PlacesList: React.FC = () => {
 
   // Filtrowanie z zachowaniem nałożonych filtrów kategorii, dostępności i wyszukiwania
   const filteredPlaces = useMemo(() => {
-    return allPlaces.filter((place) => {
-      // 1. Filtr kategorii
-      if (
-        preferences.selectedCategories.length > 0 &&
-        !preferences.selectedCategories.includes(place.category)
-      ) {
-        return false;
-      }
+  return allPlaces.filter((place) => {
+    // 1. Filtr kategorii (ustawianych m.in. przez Mood)
+    if (
+      preferences.selectedCategories.length > 0 &&
+      !preferences.selectedCategories.includes(place.category)
+    ) {
+      return false;
+    }
 
-      // 2. Dostępność dla wózków
-      if (preferences.accessibleOnly && !place.isAccessible) {
-        return false;
-      }
+    // 2. Filtr dostępności dla wózków
+    if (preferences.accessibleOnly && !place.isAccessible) {
+      return false;
+    }
 
-      // 3. Spójność wyszukiwania
-      if (searchQuery.trim()) {
-        const q = searchQuery.trim().toLowerCase();
-        const matchesName = place.name.toLowerCase().includes(q);
-        const matchesDesc = (place.description || '').toLowerCase().includes(q);
-        const matchesCategory = place.category.toLowerCase().includes(q);
-        if (!matchesName && !matchesDesc && !matchesCategory) {
-          return false;
-        }
-      }
+    // 3. Wyszukiwarka tekstowa
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const matchesName = place.name.toLowerCase().includes(q);
+      const matchesDesc = (place.description || '').toLowerCase().includes(q);
+      if (!matchesName && !matchesDesc) return false;
+    }
 
-      return true;
-    });
-  }, [allPlaces, preferences, searchQuery]);
+    return true;
+  });
+}, [allPlaces, preferences.selectedCategories, preferences.accessibleOnly, searchQuery]);
 
   // Podgląd porcjami (dla płynności DOM)
   const visiblePlaces = useMemo(() => {
