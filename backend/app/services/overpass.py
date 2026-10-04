@@ -45,12 +45,7 @@ NATURAL_VALUES = [
 ]
 
 WHEELCHAIR_VALUES = {"yes", "limited", "no", "designated"}
-ACCESSIBILITY_KEY_PREFIXES = (
-    "wheelchair", "ramp", "elevator", "lift", "tactile_paving",
-    "blind", "deaf", "hearing_loop", "handrail", "step_count", "kerb", "entrance",
-    "automatic_door", "door", "capacity:disabled", "disabled", "braille",
-    "description:blind", "description:wheelchair",
-)
+
 
 
 def build_query(area_id: int, timeout: int) -> str:
@@ -174,12 +169,6 @@ def _subtype(place_type: str, tags: Dict[str, str]) -> Optional[str]:
     return tags.get(f"{place_type}_type") or tags.get(place_type)
 
 
-
-def _accessibility_tags(tags: Dict[str, str]) -> Optional[Dict[str, str]]:
-    found = {k: v for k, v in tags.items() if k.startswith(ACCESSIBILITY_KEY_PREFIXES)}
-    return found or None
-
-
 def _normalize_wheelchair(value: Optional[str]) -> Optional[str]:
     if not value:
         return None
@@ -207,7 +196,7 @@ def parse_element(element: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     category, place_type = classification
 
     desc_parts = []
-    if base_desc := tags.get("description:en") or tags.get("description"):
+    if base_desc := tags.get("description:pl") or tags.get("description") or tags.get("description:en"):
         desc_parts.append(base_desc)
         
     compiled_description = "\n".join(desc_parts) if desc_parts else None
@@ -221,8 +210,7 @@ def parse_element(element: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         "category": category,
         "monument_type": place_type,
         "monument_subtype": _subtype(place_type, tags),
-        "wheelchair": _normalize_wheelchair(tags.get("wheelchair")),
-        "accessibility_tags": _accessibility_tags(tags),
+        "wheelchair": _normalize_wheelchair(tags.get("wheelchair"))
     }
 
 

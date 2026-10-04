@@ -188,6 +188,36 @@ body {
   transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
+.poi-popup__like {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  background: rgba(30, 41, 59, 0.9);
+  color: #cbd5e1;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.poi-popup__like:hover,
+.poi-popup__like.is-liked {
+  border-color: rgba(251, 113, 133, 0.45);
+  background: rgba(244, 63, 94, 0.12);
+  color: #fda4af;
+}
+
+.poi-popup__like span {
+  margin-left: auto;
+}
+
 .poi-popup__remove:hover {
   border-color: rgba(248, 113, 113, 0.55);
   background: rgba(239, 68, 68, 0.2);

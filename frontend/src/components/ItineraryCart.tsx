@@ -8,6 +8,7 @@ import {
   Route
 } from 'lucide-react';
 import { useAppStore } from '../store/useAppStore.ts';
+import { getCategoryLabelPL } from '../types';
 
 export const ItineraryCart: React.FC = () => {
   const { cart, removeFromCart, moveCartItem, preferences, clearCart } = useAppStore();
@@ -60,7 +61,7 @@ export const ItineraryCart: React.FC = () => {
         {isOverTimeLimit && (
           <div className="flex items-center gap-1.5 text-[11px] text-rose-400 mt-2 font-medium">
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Trasa przekracza Twój zadeklarowany budżet czasowy.</span>
+            <span>Trasa przekracza Twój zadeklarowany limit czasowy.</span>
           </div>
         )}
       </div>
@@ -98,7 +99,7 @@ export const ItineraryCart: React.FC = () => {
                   {place.name}
                 </p>
                 <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
-                  <span className="capitalize">{place.category}</span>
+                  <span>{getCategoryLabelPL(place.category)}</span>
                   <span>•</span>
                   <span>{place.durationMinutes ?? 30} min zwiedzania</span>
                 </div>

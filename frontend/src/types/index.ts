@@ -1,10 +1,11 @@
 export type Category =
-  | 'landmarks'
+  | 'history'
+  | 'viewpoint'
   | 'culture'
   | 'nature'
-  | 'food and cuisine'
+  | 'food'
   | 'entertainment'
-  | 'alcohol';
+  | 'nightlife';
 
 export type Mood = 'chill' | 'culture' | 'night_vibe' | 'quick_walk';
 
@@ -12,14 +13,22 @@ export interface Place {
   id: string | number;
   name: string;
   category: Category;
-  monument_type: string;
-  monument_subtype?: string;
   latitude: number;
   longitude: number;
   isAccessible: boolean;
-  wheelchair?: string;
   description?: string;
-  durationMinutes: number;
+  durationMinutes?: number;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  isWellLit?: boolean;
+  wheelchair?: string;
+  monument_type?: string;
+  monument_subtype?: string;
+  likesCount: number;
+  isLiked: boolean;
+  imageUrl?: string;
 }
 
 export interface UserPreferences {
@@ -30,11 +39,20 @@ export interface UserPreferences {
   selectedCategories: Category[];
 }
 
+export interface PlaceFilterParams {
+  search?: string;
+  accessibleOnly?: boolean;
+  categories?: Category[];
+  excludeCategories?: Category[];
+  limit?: number;
+  offset?: number;
+}
+
 export interface RouteSegmentProperties {
-  green: number;
-  traffic: number;
-  lit: boolean;
-  highway: string;
+  green?: number;
+  traffic?: number;
+  lit?: boolean;
+  highway?: string;
 }
 
 export interface RouteSegment {
@@ -69,4 +87,19 @@ export interface RouteResponse {
         type: 'LineString';
         coordinates: [number, number][];
       };
+}
+
+export const CATEGORY_LABELS_PL: Record<string, string> = {
+  history: 'Zabytki',
+  viewpoint: 'Widoki',
+  culture: 'Kultura & Sztuka',
+  nature: 'Parki & Zieleń',
+  food: 'Gastronomia',
+  entertainment: 'Rozrywka',
+  nightlife: 'Bary & Puby',
+};
+
+export function getCategoryLabelPL(category?: string): string {
+  if (!category) return 'Inne';
+  return CATEGORY_LABELS_PL[category.toLowerCase()] || category;
 }

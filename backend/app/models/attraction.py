@@ -1,10 +1,10 @@
 from datetime import datetime
 from sqlalchemy import (
     JSON,
-    BigInteger,
     Column,
     DateTime,
     Float,
+    ForeignKey,
     Index,
     Integer,
     String,
@@ -35,17 +35,26 @@ class Attraction(Base):
     monument_subtype = Column(String(100), nullable=True)
 
     wheelchair = Column(String(20), nullable=True, index=True)
-    # toilets_wheelchair = Column(String(20), nullable=True)
-    accessibility_tags = Column(JSON, nullable=True)
 
-    # address = Column(String(255), nullable=True)
-    # website = Column(String(500), nullable=True)
-    # opening_hours = Column(String(255), nullable=True)
-    # wikipedia = Column(String(255), nullable=True)
-    # wikidata = Column(String(50), nullable=True)
-    # image = Column(String(500), nullable=True)
 
-    # tags = Column(JSON, nullable=False, default=dict)
+class AttractionLike(Base):
+    """One anonymous browser vote for an attraction."""
 
-    # created_at = Column(DateTime, default=datetime.utcnow)
-    # updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    __tablename__ = "attraction_likes"
+    __table_args__ = (
+        UniqueConstraint(
+            "attraction_id",
+            "visitor_id",
+            name="uq_attraction_like_visitor",
+        ),
+        Index("ix_attraction_likes_attraction_id", "attraction_id"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True, nullable=False)
+    attraction_id = Column(
+        Integer,
+        ForeignKey("attractions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    visitor_id = Column(String(64), nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
