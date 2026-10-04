@@ -31,14 +31,14 @@ export const PlacesList: React.FC = () => {
   }, [allPlaces, preferences]);
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between text-xs text-slate-400 px-1">
-        <span>Sugerowane atrakcje</span>
+    <div className="space-y-3 text-center mx-auto mb-10 space-y-2 bg-neutral-200/90 p-2 rounded-xl border border-neutral-200 shadow-md">
+      <div className="flex items-center justify-between text-xs text-emerald-800 px-1 bg-neutral-200/90">
+        <span className="block text-xs font-semibold uppercase tracking-wider text-emerald-800 mb-2">Sugerowane atrakcje</span>
         <span>{filteredPlaces.length} miejsc</span>
       </div>
 
       {filteredPlaces.length === 0 ? (
-        <div className="p-6 text-center rounded-xl bg-slate-900/40 border border-slate-800 text-slate-500 space-y-2">
+        <div className="p-6 text-center rounded-xl text-emerald-800 space-y-2">
           <Compass className="w-8 h-8 mx-auto stroke-1" />
           <p className="text-xs">Brak miejsc spełniających wszystkie wybrane filtry.</p>
         </div>

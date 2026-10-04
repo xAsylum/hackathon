@@ -14,10 +14,10 @@ import { useAppStore } from '../store/useAppStore.ts';
 import { Mood, Category } from '../types';
 
 const MOODS: { id: Mood; label: string; icon: React.ElementType }[] = [
-  { id: 'chill', label: 'Spokój & Parki', icon: Trees },
-  { id: 'culture', label: 'Kultura & Historia', icon: Landmark },
-  { id: 'night_vibe', label: 'Nocne Klimaty', icon: Moon },
-  { id: 'quick_walk', label: 'Szybki Spacer', icon: Sparkles },
+  { id: 'chill', label: 'Spokój', icon: Trees },
+  { id: 'culture', label: 'Kultura i historia', icon: Landmark },
+  { id: 'night_vibe', label: 'Nocne klimaty', icon: Moon },
+  { id: 'quick_walk', label: 'Szybki spacer', icon: Sparkles },
 ];
 
 const CATEGORIES: { id: Category; label: string; icon: React.ElementType }[] = [
@@ -39,11 +39,11 @@ export const PreferencesForm: React.FC = () => {
   };
 
   return (
-    <div className="space-y-5 bg-slate-900/90 p-4 rounded-xl border border-slate-800 shadow-sm text-sm">
+    <div className="space-y-5 bg-neutral-200/90 p-4 rounded-xl border border-neutral-200 shadow-sm text-sm">
       {/* 1. Nastrój (Mood) */}
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-          Nastrój wycieczki
+        <label className="block text-xs font-semibold uppercase tracking-wider text-emerald-800 mb-2">
+          Typ wycieczki
         </label>
         <div className="grid grid-cols-2 gap-2">
           {MOODS.map(({ id, label, icon: Icon }) => {
@@ -55,11 +55,11 @@ export const PreferencesForm: React.FC = () => {
                 onClick={() => setPreferences({ mood: id })}
                 className={`flex items-center gap-2 p-2 rounded-lg border text-left transition-all ${
                   active
-                    ? 'bg-emerald-500/10 border-emerald-500 text-emerald-300 font-medium'
-                    : 'bg-slate-800/60 border-slate-700/60 text-slate-300 hover:bg-slate-800'
+                    ? 'bg-emerald-800/70 border-emerald-800 text-neutral-200'
+                    : 'bg-neutral-100 border-emerald-800 text-emerald-800 font-medium hover:bg-emerald-800/30'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${active ? 'text-emerald-400' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${active ? 'text-neutral-200' : 'text-emerald-800' }`} />
                 <span className="text-xs truncate">{label}</span>
               </button>
             );
@@ -70,11 +70,11 @@ export const PreferencesForm: React.FC = () => {
       {/* 2. Dostępny czas */}
       <div>
         <div className="flex justify-between items-center mb-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-emerald-400" />
+          <label className="text-xs font-semibold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-emerald-800" />
             Dostępny czas
           </label>
-          <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+          <span className="text-xs font-bold text-emerald-800 bg-emerald-800/10 px-2 py-0.5 rounded border border-emerald-500/20">
             {preferences.availableTimeMinutes} min ({Math.round(preferences.availableTimeMinutes / 60 * 10) / 10}h)
           </span>
         </div>
@@ -85,7 +85,7 @@ export const PreferencesForm: React.FC = () => {
           step="30"
           value={preferences.availableTimeMinutes}
           onChange={(e) => setPreferences({ availableTimeMinutes: Number(e.target.value) })}
-          className="w-full accent-emerald-500 bg-slate-800 rounded-lg cursor-pointer h-1.5"
+          className="w-full accent-emerald-800 bg-emerald-800 rounded-lg cursor-pointer h-1.5"
         />
         <div className="flex justify-between text-[10px] text-slate-500 mt-1">
           <span>30m</span>
@@ -96,16 +96,16 @@ export const PreferencesForm: React.FC = () => {
       </div>
 
       {/* 3. Filtry Smart City */}
-      <div className="space-y-2 pt-2 border-t border-slate-800">
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
+      <div className="space-y-2 pt-2 border-t border-emerald-800">
+        <label className="block text-xs font-semibold uppercase tracking-wider text-emerald-800">
           Priorytety miejskie
         </label>
 
         {/* Przełącznik oświetlenia */}
-        <label className="flex items-center justify-between p-2 rounded-lg bg-slate-800/40 border border-slate-800 cursor-pointer hover:bg-slate-800/70 transition-colors">
+        <label className="flex items-center justify-between p-2 rounded-lg bg-emerald-800/10 border-emerald-800 text-emerald-800 cursor-pointer hover:bg-emerald-800/50 transition-colors">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-amber-400" />
-            <span className="text-xs text-slate-200">Korytarz oświetlony (noc)</span>
+            <ShieldCheck className="w-4 h-4" />
+            <span className="text-xs">Oświetlenie</span>
           </div>
           <input
             type="checkbox"
@@ -116,10 +116,10 @@ export const PreferencesForm: React.FC = () => {
         </label>
 
         {/* Przełącznik dostępności */}
-        <label className="flex items-center justify-between p-2 rounded-lg bg-slate-800/40 border border-slate-800 cursor-pointer hover:bg-slate-800/70 transition-colors">
+        <label className="flex items-center justify-between p-2 rounded-lg bg-emerald-800/10 border-emerald-800 text-emerald-800 cursor-pointer hover:bg-emerald-800/50 transition-colors">
           <div className="flex items-center gap-2">
-            <Accessibility className="w-4 h-4 text-sky-400" />
-            <span className="text-xs text-slate-200">Bez barier (wózki / windy)</span>
+            <Accessibility className="w-4 h-4" />
+            <span className="text-xs">Ułatwienia dostępu</span>
           </div>
           <input
             type="checkbox"
@@ -132,7 +132,7 @@ export const PreferencesForm: React.FC = () => {
 
       {/* 4. Kategorie */}
       <div>
-        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+        <label className="block text-xs font-semibold uppercase tracking-wider text-emerald-800 mb-2">
           Kategorie
         </label>
         <div className="flex flex-wrap gap-1.5">
@@ -145,8 +145,8 @@ export const PreferencesForm: React.FC = () => {
                 onClick={() => toggleCategory(id)}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs transition-colors border ${
                   isSelected
-                    ? 'bg-slate-700 border-slate-500 text-white'
-                    : 'bg-slate-800/40 border-slate-800 text-slate-400 hover:text-slate-200'
+                    ? 'bg-emerald-800/70 border-emerald-800 text-neutral-200'
+                    : 'bg-emerald-800/10 border-emerald-800 text-emerald-800 font-medium hover:bg-emerald-800/30'
                 }`}
               >
                 <Icon className="w-3 h-3" />

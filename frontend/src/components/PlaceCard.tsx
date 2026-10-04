@@ -12,13 +12,13 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
   const isInCart = cart.some((item) => item.id === place.id);
 
   return (
-    <div className="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800/80 hover:border-slate-700 transition-all flex flex-col justify-between gap-3 group">
+    <div className="p-3 bg-neutral-100 rounded-xl border border-emerald-800 transition-all flex flex-col justify-between gap-3 group hover:bg-emerald-800/10">
       <div>
         <div className="flex items-start justify-between gap-2">
-          <h4 className="font-semibold text-slate-100 text-sm leading-tight group-hover:text-emerald-300 transition-colors">
+          <h4 className="font-semibold text-emerald-800 text-sm leading-tight transition-colors">
             {place.name}
           </h4>
-          <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700/50">
+          <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-800 text-neutral-200 border border-slate-700/50">
             {place.category}
           </span>
         </div>
@@ -48,7 +48,7 @@ export const PlaceCard: React.FC<PlaceCardProps> = ({ place }) => {
           className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
             isInCart
               ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-              : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+              : 'bg-emerald-800 hover:bg-emerald-500 text-neutral-203 shadow-sm'
           }`}
         >
           {isInCart ? (
